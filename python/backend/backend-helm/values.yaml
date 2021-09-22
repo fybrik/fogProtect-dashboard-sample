@@ -1,0 +1,97 @@
+# Default values for protegochart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+#  repository: 192.168.56.4:31965 
+  name: querygateway_hack:v1
+  pullPolicy: Never
+  # Overrides the image tag whose default is the chart version.
+  #tag: ""
+
+app:
+  name: querygw
+  port: 9005
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: NodePort
+  port: 9005
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+envs:
+  name: "VAULT_TOKEN"
+  value: "{'tokenType': 'keycloak', 'AccessOrIDToken': 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNWtWZ3RibEVDNlJQSy1feUZabnNmdUY1NVpodE0zX1p2WWFjUzM4NS1vIn0.eyJqdGkiOiJhNmM0OWYyZC1iZjE5LTQxNWQtYWY0My0zNmJlNzIyNmM4ZGMiLCJleHAiOjE1ODY4NzA2MzQsIm5iZiI6MCwiaWF0IjoxNTg2ODY5OTE0LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvYXV0aC9yZWFsbXMvZGVtbyIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJjN2Q4NDcxMi04NzIwLTQ2ZmYtODYyZi02MTUyNjI2OTBkYjUiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJmYS1jb25zb2xlIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiYzU1Y2EwMzgtMmE5Zi00YWUxLThhYjgtY2Q3NDgyOThmNWQzIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwOi8vbG9jYWxob3N0OjgwODAiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm15Um9sZSIsIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iLCJ1c2VyIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJwcm9maWxlIG15c2NvcGUgZW1haWwiLCJncm91cHMyIjpbIi9Eb2N0b3JzIl0sImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwibmFtZSI6ImEgYiIsImdyb3VwcyI6WyIvRG9jdG9ycyJdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJ0ZXN0IiwiZ2l2ZW5fbmFtZSI6ImEiLCJmYW1pbHlfbmFtZSI6ImIiLCJlbWFpbCI6ImVsY2VuZzJAeWFob28uY29tIn0.DpPepk-u0natqOlKz2r_9aKnG75yaXqB59tPpnRPN9CSD97cs_g1KYulYKauNZp1_yFT-Q0HU6RrFXIIGyBZUcNezev5nM2T8FJybHUvRqZQUPgtIC474TFjxOPw8Qj14gBPqtd57dsEo5q0vGgwR4pplyyuMOW5oCqTQajItDX4dG6TB6lNcU-Ryc8uPRT8yPdiN_yWEt7gjdSSoiACF_-C71ieigaSf9cH0AjOBYVz2QBcRHuNriYc3v1R_JpnxyI14RAMlFetuaClyxn89pi65iE4UobjULEkKgcPtNkIg0CpS_FceWFnc00VpCfE5aXPNsndxAum2Zi2DXHuow', 'AuthToken': 's.JvKotVPg3HlQ1ZpchK6xerB'}"
+  name: "VAULT_URI"
+  value: "http://kul-kms:5000/KUL/KMS"
+
+persistence:
+  enabled: false
+  storage: 1Gi
+  path: "/Users/eliot/fhir/gateway-k8s"
+  accessmode: ReadWriteOnce
+  mountpath: "/root/fhir/gateway"
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

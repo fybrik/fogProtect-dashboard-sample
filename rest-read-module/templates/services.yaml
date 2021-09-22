@@ -1,0 +1,109 @@
+##################################################################################################
+# App service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.app.name }} 
+  labels:
+    app: {{ .Values.app.name }}  
+    service: {{ .Values.app.name }} 
+spec:
+  ports:
+  - port: {{ .Values.service.port }} 
+    name: https
+    targetPort: {{ .Values.app.port }} 
+  type: {{ .Values.service.type }}
+  selector:
+    app: {{ .Values.app.name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.app.name }} 
+  labels:
+    app: {{ .Values.app.name }} 
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: 1
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ .Values.app.name }} 
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app: {{ .Values.app.name }} 
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      securityContext:
+        {{- toYaml .Values.opaSidecar.podSecurityContext | nindent 8 }}
+{{- if .Values.persistence.enabled }}
+      volumes:
+        - name: {{ .Values.app.name }}-pv-storage
+          persistentVolumeClaim:
+            claimName: {{ .Values.app.name }}-pv-claim
+{{- end }}
+      containers:
+      - name: {{ .Values.app.name }}
+        securityContext:
+          {{- toYaml .Values.opaSidecar.securityContext | nindent 10 }}
+        image: {{ .Values.image.name }}  
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: https 
+          containerPort: {{ .Values.app.port }} 
+{{- if .Values.persistence.enabled }}
+        volumeMounts:
+          - mountPath: {{ .Values.persistence.mountpath | quote }}
+            name: {{ .Values.app.name }}-pv-storage
+{{- end }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.configmap.name }}
+{{- if .Values.opaSidecar.enabled }}
+      - name: {{ .Values.opaSidecar.opa.name }}
+        securityContext:
+          {{- toYaml .Values.opaSidecar.securityContext | nindent 10 }}
+        args:
+          {{- toYaml .Values.opaSidecar.opa.args | nindent 10 }}
+        image: {{ .Values.opaSidecar.opa.image.name }}
+        imagePullPolicy: {{ .Values.opaSidecar.opa.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.opaSidecar.opa.port }}
+          name: http
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.opaSidecar.opa.resources | nindent 10 }}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      - name: {{ .Values.opaSidecar.kubemgmt.name }}
+        securityContext:
+          {{- toYaml .Values.opaSidecar.securityContext | nindent 10 }}
+        args:
+          - --require-policy-label
+          - --policies={{ .Release.Namespace }}
+          - --replicate=katalog.fybrik.io/v1alpha1/assets
+        image: {{ .Values.opaSidecar.kubemgmt.image.name }}
+        imagePullPolicy: {{ .Values.opaSidecar.kubemgmt.image.pullPolicy }}
+        resources: { }
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+{{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---

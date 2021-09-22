@@ -1,0 +1,28 @@
+apiVersion: katalog.fybrik.io/v1alpha1
+kind: Asset
+metadata:
+  name: api.control.start-robot
+spec:
+  secretRef:
+    name: start-robot-secret
+  assetDetails:
+    dataFormat: csv
+    connection:
+      type: s3
+      s3:
+        endpoint: "http://127.0.0.1:5559/api/control/start_robot"
+        bucket: demo
+        objectKey: "hello"
+  assetMetadata:
+    tags:
+    - control
+    componentsMetadata:
+      id:
+        tags:
+        - PII
+      Age:
+        tags:
+        - PII
+      Lname:
+        tags:
+        - sensitive

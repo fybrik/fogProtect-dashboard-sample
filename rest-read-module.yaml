@@ -1,0 +1,30 @@
+apiVersion: app.fybrik.io/v1alpha1
+kind: FybrikModule
+metadata:
+  name: rest-read-module
+  labels:
+    name: rest-read-module
+    version: 0.0.1  # semantic version
+  namespace: fybrik-system
+spec:
+  type: service
+  chart:
+    name: ghcr.io/robshahla/rest-read-module-chart:v0.0.1
+  capabilities:
+    - capability: read
+      actions:
+        - id: redact-ID
+          level: 2  # column
+      api:
+        endpoint:
+          port: 5559
+          scheme: rest
+        protocol: s3
+        dataformat: csv
+      supportedInterfaces:
+        - source:
+            protocol: s3
+            dataformat: csv
+        - source:
+            protocol: s3
+            dataformat: csv

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filteropa
+data:
+  PYTHONUNBUFFERED: "1"
+  PYTHONIOENCODING: UTF-8
+  Server_backend_address: querygw.fogprotect
+  OPA_asset_namespace: fogprotect
+  SCHEMA_ROLE: "role"

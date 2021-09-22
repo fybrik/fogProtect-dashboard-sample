@@ -1,0 +1,46 @@
+apiVersion: katalog.fybrik.io/v1alpha1
+kind: Asset
+metadata:
+  name: api.personnel-data.get-safety-data
+spec:
+  secretRef:
+    name: start-robot-secret
+  assetDetails:
+    dataFormat: csv
+    connection:
+      type: s3
+      s3:
+        endpoint: "http://127.0.0.1:5559/api/control/start_robot"
+        bucket: demo
+        objectKey: "hello"
+  assetMetadata:
+    tags:
+    - personnel
+    componentsMetadata:
+      production_sector.with_helmet:
+        tags:
+        - PII
+      production_sector.without_helmet:
+        tags:
+          - PII
+      production_sector.total:
+        tags:
+          - sensitive
+      non_production_sector.with_helmet:
+        tags:
+        - PII
+      non_production_sector.without_helmet:
+        tags:
+          - PII
+      non_production_sector.total:
+        tags:
+          - sensitive
+      full_area.with_helmet:
+        tags:
+          - PII
+      full_area.without_helmet:
+        tags:
+          - PII
+      full_area.total:
+        tags:
+          - sensitive
