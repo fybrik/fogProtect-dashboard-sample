@@ -1,5 +1,5 @@
 # FogProtect Usecase
-## Build environment
+## Environment Build
 1) Follow the steps of the QuickStart Guide in: https://fybrik.io/v0.4/get-started/quickstart/.  
 Displayed here for convenience:  
    1) ```
@@ -37,21 +37,66 @@ Displayed here for convenience:
 kubectl create namespace fogprotect
 kubectl config set-context --current --namespace=fogprotect
 ```
-3) Clone this repository, branch `robert-dev`:  
+
+## Deployment
+1) Build the backend data server:
 ```shell
-git clone --branch robert-dev https://github.ibm.com/SALANT/FogProtect.git
+helm chart pull ghcr.io/robshahla/backend-server-chart:v0.0.1
+helm chart export --destination=./tmp ghcr.io/robshahla/backend-server-chart:v0.0.1
+helm install rel1-backend-server ./tmp/backend_server
 ```
-4) Build the backend data server:  
+
+2) Deploy the assets and the required secret:
 ```shell
-cd FogProtect/python/backend
+wget assets...
+kubectl apply -f assets/
+```
+
+3) Apply the RBAC for the fybrik manager so that the manager can list the assets and other resources:  
+```shell
+wget rbac...
+kubectl apply -f fybrik-system-manager-rbac.yaml -n fybrik-system
+```
+
+4) Deploy the filter pod:
+```shell
+kubectl apply -f rest-read-module.yaml -n fybrik-system
+kubectl apply -f rest-read-application.yaml
+```
+
+5) Wait a couple of seconds after the last step, and then create a port-forwarding to the filter service:  
+```shell
+kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559
+```
+
+6) Deploy the pod of the GUI:
+```shell
+helm chart pull ghcr.io/robshahla/factory-gui-chart:v0.0.1
+helm chart export --destination=./tmp ghcr.io/robshahla/factory-gui-chart:v0.0.1
+helm install rel1-factory-gui ./tmp/factory_gui
+```
+
+7) Wait a couple of seconds after the last step, and then create a port-forwarding to the GUI service:
+```shell
+kubectl port-forward svc/factory-gui 3001:3000
+```  
+
+## Development
+1) Clone this repository:  
+```shell
+git clone git@github.com:fybrik/fog-protect.git
+```
+2) Build the backend data server:  
+```shell
+cd fog-protect/python/backend
 docker build -t querygateway_hack:v1 .
 kind load docker-image querygateway_hack:v1 --name kind-cluster
 helm install backend-service backend_server-0.1.0.tgz
 ```
-5) Follow the instructions in https://github.com/fybrik/hello-world-read-module#installation 
+3) Follow the instructions in https://github.com/fybrik/hello-world-read-module#installation 
 under the `Installation` section, brought here for convenience:  
    -  After modifying the values in the Makefile as required in the link above, 
-      **make sure that the current directory is `FogProtect/`**. Invoke:  
+      **make sure that the current directory is `fog-protect/`**. Invoke:  
       ```shell
       make docker-build
       make docker-push
@@ -61,30 +106,46 @@ under the `Installation` section, brought here for convenience:
       ```
 **Improtant note: make sure that the repositories where the docker image and the helm chart were pushed 
    are public**  
-6) Apply the RBAC for the fybrik manager:  
+4) Apply the RBAC for the fybrik manager:  
 ```shell
 kubectl apply -f fybrik-system-manager-rbac.yaml -n fybrik-system
 ```
-7) Apply all of the assets, along with the `secret` under the directory `FogProtect/assets` in the 
+5) Apply all of the assets, along with the `secret` under the directory `FogProtect/assets` in the 
 `forprotect` namespace (the current context of `kubectl`:  
 ```shell
 kubectl apply -f assets/<asset_yaml_file>
 ```
-8) Apply the module in the `fybrik-system` namespace:  
+6) Apply the module in the `fybrik-system` namespace:  
 ```shell 
 kubectl apply -f rest-read-module.yaml -n fybrik-system
 ```
-9) Apply the application in the `fogprotect` namespace (current `kubectl` context):
+7) Apply the application in the `fogprotect` namespace (current `kubectl` context):
 ```shell
 kubectl apply -f rest-read-application.yaml
 ```
-10) Wait a couple of seconds after the last step, and then create the port-forwarding:  
+8) Wait a couple of seconds after the last step, and then create the port-forwarding:  
 ```shell
 kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559
 ```
-11) Start the GUI:
+9) To build the image for the GUI and push it to the public images registry specified in the makefile, invoke the 
+following:
 ```shell
-cd gui/
-npm install
-npm start
+make DOCKER_IMG_NAME=gui DOCKER_FILE=./gui/Dockerfile docker-all
+make DOCKER_CHART_IMG_NAME=factory-gui-chart DOCKER_IMG_NAME=gui DOCKER_FILE=./gui/Dockerfile CHART_PATH=./gui/helm helm-verify
+make DOCKER_CHART_IMG_NAME=factory-gui-chart DOCKER_IMG_NAME=gui DOCKER_FILE=./gui/Dockerfile CHART_PATH=./gui/helm helm-chart-push
 ```
+- To deploy the GUI pod invoke:
+    ```shell
+    make DOCKER_CHART_IMG_NAME=factory-gui-chart DOCKER_IMG_NAME=gui DOCKER_FILE=./gui/Dockerfile CHART_PATH=./gui/helm helm-install
+    ```
+10) To build the image for the backend server and push it to the public images registry specified in the makefile, invoke the 
+following:
+```shell
+make DOCKER_IMG_NAME=backend-server DOCKER_FILE=./python/backend/Dockerfile docker-all
+make DOCKER_CHART_IMG_NAME=backend-server-chart DOCKER_IMG_NAME=backend-server DOCKER_FILE=./python/backend/Dockerfile CHART_PATH=./python/backend/helm helm-verify
+make DOCKER_CHART_IMG_NAME=backend-server-chart DOCKER_IMG_NAME=backend-server DOCKER_FILE=./python/backend/Dockerfile CHART_PATH=./python/backend/helm helm-chart-push
+```
+- To deploy the backend server pod invoke:
+  ```shell
+  make DOCKER_CHART_IMG_NAME=backend-server-chart DOCKER_IMG_NAME=backend-server DOCKER_FILE=./python/backend/Dockerfile CHART_PATH=./python/backend/helm helm-install
+  ```

@@ -6,14 +6,14 @@ replicaCount: 1
 
 image:
 #  repository: 192.168.56.4:31965 
-  name: ghcr.io/robshahla/factory_gui:v0.0.1
+  name: ghcr.io/robshahla/backend-server:v0.0.1
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart version.
   #tag: ""
 
 app:
-  name: factory-gui
-  port: 3000
+  name: backend-server
+  port: 9005
 
 imagePullSecrets: []
 nameOverride: ""
@@ -43,7 +43,7 @@ securityContext: {}
 
 service:
   type: NodePort
-  port: 3000
+  port: 9005
 
 ingress:
   enabled: false
@@ -69,6 +69,12 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
+
+envs:
+  name: "VAULT_TOKEN"
+  value: "{'tokenType': 'keycloak', 'AccessOrIDToken': 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNWtWZ3RibEVDNlJQSy1feUZabnNmdUY1NVpodE0zX1p2WWFjUzM4NS1vIn0.eyJqdGkiOiJhNmM0OWYyZC1iZjE5LTQxNWQtYWY0My0zNmJlNzIyNmM4ZGMiLCJleHAiOjE1ODY4NzA2MzQsIm5iZiI6MCwiaWF0IjoxNTg2ODY5OTE0LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvYXV0aC9yZWFsbXMvZGVtbyIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJjN2Q4NDcxMi04NzIwLTQ2ZmYtODYyZi02MTUyNjI2OTBkYjUiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJmYS1jb25zb2xlIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiYzU1Y2EwMzgtMmE5Zi00YWUxLThhYjgtY2Q3NDgyOThmNWQzIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwOi8vbG9jYWxob3N0OjgwODAiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm15Um9sZSIsIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iLCJ1c2VyIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJwcm9maWxlIG15c2NvcGUgZW1haWwiLCJncm91cHMyIjpbIi9Eb2N0b3JzIl0sImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwibmFtZSI6ImEgYiIsImdyb3VwcyI6WyIvRG9jdG9ycyJdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJ0ZXN0IiwiZ2l2ZW5fbmFtZSI6ImEiLCJmYW1pbHlfbmFtZSI6ImIiLCJlbWFpbCI6ImVsY2VuZzJAeWFob28uY29tIn0.DpPepk-u0natqOlKz2r_9aKnG75yaXqB59tPpnRPN9CSD97cs_g1KYulYKauNZp1_yFT-Q0HU6RrFXIIGyBZUcNezev5nM2T8FJybHUvRqZQUPgtIC474TFjxOPw8Qj14gBPqtd57dsEo5q0vGgwR4pplyyuMOW5oCqTQajItDX4dG6TB6lNcU-Ryc8uPRT8yPdiN_yWEt7gjdSSoiACF_-C71ieigaSf9cH0AjOBYVz2QBcRHuNriYc3v1R_JpnxyI14RAMlFetuaClyxn89pi65iE4UobjULEkKgcPtNkIg0CpS_FceWFnc00VpCfE5aXPNsndxAum2Zi2DXHuow', 'AuthToken': 's.JvKotVPg3HlQ1ZpchK6xerB'}"
+  name: "VAULT_URI"
+  value: "http://kul-kms:5000/KUL/KMS"
 
 persistence:
   enabled: false

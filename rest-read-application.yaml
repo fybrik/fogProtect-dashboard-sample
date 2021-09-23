@@ -6,13 +6,23 @@ spec:
   selector:
    workloadSelector:
      matchLabels: {
-       app: rest-read
+       app: factory-gui
      }
   appInfo:
     purpose: security
     role: Data Owner
   data:
     - dataSetID: "fogprotect/api.control.start-robot"
+      requirements:
+        interface:
+          protocol: s3
+          dataformat: csv
+    - dataSetID: "fogprotect/api.control.stop-robot"
+      requirements:
+        interface:
+          protocol: s3
+          dataformat: csv
+    - dataSetID: "fogprotect/api.personnel-data.get-safety-data"
       requirements:
         interface:
           protocol: s3
