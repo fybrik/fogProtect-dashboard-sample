@@ -110,11 +110,25 @@ under the `Installation` section, brought here for convenience:
 ```shell
 kubectl apply -f fybrik-system-manager-rbac.yaml -n fybrik-system
 ```
-5) Apply all of the assets, along with the `secret` under the directory `FogProtect/assets` in the 
-`forprotect` namespace (the current context of `kubectl`:  
+5) Apply all of the assets, along with the `secret` under the directory `fog-protect/assets` in the 
+`forprotect` namespace (the current context of `kubectl`):  
 ```shell
-kubectl apply -f assets/<asset_yaml_file>
+kubectl apply -f assets/
 ```
+
+6) Apply all of the secrets under the directory `fog-protect/assets` in the 
+`forprotect` namespace (the current context of `kubectl`):  
+```shell
+kubectl apply -f secrets/
+```
+**Note:** the secret `secrets/jwt_key_secret.yaml` contains the secret key used as the authentication key for the 
+JWT used between the rest filter and the frontend GUI, in order to change the key, you can invoke:  
+- ```shell
+  echo -n '<your_key>' | base64
+  ```
+  And once you get the base64 encoding of your key, modify the value of `data.jwt_key` in `jwt_key_secret.yaml`. 
+  In order for the change to take effect, the GUI and the rest-read pods need to be restarted.  
+
 6) Apply the module in the `fybrik-system` namespace:  
 ```shell 
 kubectl apply -f rest-read-module.yaml -n fybrik-system
