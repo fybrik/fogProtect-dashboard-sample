@@ -89,8 +89,8 @@ def decrypt_jwt(encrypted_token, flat_key):
 
     stripped_token = encrypted_token[len(prefix):].strip()
     algorithms = ["HS256"]  # using the default, if it is changed then it should also be changed in the frontend code
-    secret = "temp"
-    decoded_jwt = jwt.api_jwt.decode(stripped_token, secret, algorithms)
+    authentication_key = os.getenv("JWT_KEY")
+    decoded_jwt = jwt.api_jwt.decode(stripped_token, authentication_key, algorithms)
 
     logger.debug(f"decoded_jwt: {decoded_jwt}")
 

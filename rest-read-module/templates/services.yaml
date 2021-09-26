@@ -65,6 +65,16 @@ spec:
         envFrom:
         - configMapRef:
             name: {{ .Values.configmap.name }}
+        - secretRef:
+            name: {{ .Values.jwtSecret.secretName }}
+#        env:
+#          - name: {{ .Values.jwtSecret.varName }}
+#            valueFrom:
+#              secretKeyRef:
+#                name: {{ .Values.jwtSecret.secretName }}
+#                key: {{ .Values.jwtSecret.key }}
+#          - configMapRef:
+#              name: {{ .Values.configmap.name }}
 {{- if .Values.opaSidecar.enabled }}
       - name: {{ .Values.opaSidecar.opa.name }}
         securityContext:

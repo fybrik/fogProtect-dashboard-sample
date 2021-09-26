@@ -47,11 +47,11 @@ spec:
         - name: http
           containerPort: {{ .Values.app.port }}
         env:
-          - name: JWT_KEY
+          - name: {{ .Values.jwtSecret.varName }}
             valueFrom:
               secretKeyRef:
-                name: jwt-key-secret
-                key: jwt_key
+                name: {{ .Values.jwtSecret.secretName }}
+                key: {{ .Values.jwtSecret.key }}
 
 {{- if .Values.persistence.enabled }}
         volumeMounts:
