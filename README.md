@@ -39,44 +39,51 @@ kubectl config set-context --current --namespace=fogprotect
 ```
 
 ## Deployment
-1) Build the backend data server:
+1) Deploy the backend data server:
 ```shell
 helm chart pull ghcr.io/robshahla/backend-server-chart:v0.0.1
 helm chart export --destination=./tmp ghcr.io/robshahla/backend-server-chart:v0.0.1
 helm install rel1-backend-server ./tmp/backend_server
 ```
 
-2) Deploy the assets and the required secret:
+2) Create the assets:
 ```shell
 wget assets...
 kubectl apply -f assets/
+```  
+3) Create all of the secrets under the directory `fog-protect/assets` in the 
+`forprotect` namespace (the current context of `kubectl`), and afterwards create the `jwt_key_secret.yaml` in 
+the `fybrik-blueprints` namespace:  
+```shell
+kubectl apply -f secrets/
+kubectl apply -n fybrik-blueprints -f secrets/jwt_key_secret.yaml
 ```
 
-3) Apply the RBAC for the fybrik manager so that the manager can list the assets and other resources:  
+4) Create the RBAC for the fybrik manager so that the manager can list the assets and other resources:  
 ```shell
 wget rbac...
 kubectl apply -f fybrik-system-manager-rbac.yaml -n fybrik-system
 ```
 
-4) Deploy the filter pod:
+5) Deploy the filter pod:
 ```shell
 kubectl apply -f rest-read-module.yaml -n fybrik-system
 kubectl apply -f rest-read-application.yaml
 ```
 
-5) Wait a couple of seconds after the last step, and then create a port-forwarding to the filter service:  
+6) Wait a couple of seconds after the last step, and then create a port-forwarding to the filter service:  
 ```shell
 kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559
 ```
 
-6) Deploy the pod of the GUI:
+7) Deploy the pod of the GUI:
 ```shell
 helm chart pull ghcr.io/robshahla/factory-gui-chart:v0.0.1
 helm chart export --destination=./tmp ghcr.io/robshahla/factory-gui-chart:v0.0.1
 helm install rel1-factory-gui ./tmp/factory_gui
 ```
 
-7) Wait a couple of seconds after the last step, and then create a port-forwarding to the GUI service:
+8) Wait a couple of seconds after the last step, and then create a port-forwarding to the GUI service:
 ```shell
 kubectl port-forward svc/factory-gui 3001:3000
 ```  
@@ -126,7 +133,7 @@ JWT used between the rest filter and the frontend GUI, in order to change the ke
 - ```shell
   echo -n '<your_key>' | base64
   ```
-  And once you get the base64 encoding of your key, modify the value of `data.jwt_key` in `jwt_key_secret.yaml`. 
+  Once you get the base64 encoding of your key, modify the value of `data.jwt_key` in `jwt_key_secret.yaml`. 
   In order for the change to take effect, the GUI and the rest-read pods need to be restarted.  
 
 6) Apply the module in the `fybrik-system` namespace:  
