@@ -7,7 +7,7 @@ replicaCount: 1
 image:
 #  repository: 192.168.56.4:31965 
   name: ghcr.io/robshahla/backend-server:v0.0.1
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart version.
   #tag: ""
 
