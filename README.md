@@ -51,7 +51,7 @@ helm install rel1-backend-server ./tmp/backend_server
 wget assets...
 kubectl apply -f assets/
 ```  
-3) Create all of the secrets under the directory `fog-protect/assets` in the 
+3) Create all of the secrets under the directory `fog-protect/secrets` in the 
 `forprotect` namespace (the current context of `kubectl`), and afterwards create the `jwt_key_secret.yaml` in 
 the `fybrik-blueprints` namespace:  
 ```shell
@@ -81,26 +81,23 @@ kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559
 helm chart pull ghcr.io/robshahla/factory-gui-chart:v0.0.1
 helm chart export --destination=./tmp ghcr.io/robshahla/factory-gui-chart:v0.0.1
 helm install rel1-factory-gui ./tmp/factory_gui
+kubectl wait --for=condition=ready --all pod --timeout=120s
 ```
 
-8) Wait a couple of seconds after the last step, and then create a port-forwarding to the GUI service:
+8) Create a port-forwarding to the GUI service:
 ```shell
 kubectl port-forward svc/factory-gui 3001:3000
 ```  
+
+9) Open a browser and go to: `http://127.0.0.1:3001` to use the GUI.  
 
 ## Development
 1) Clone this repository:  
 ```shell
 git clone git@github.com:fybrik/fog-protect.git
 ```
-2) Build the backend data server:  
-```shell
-cd fog-protect/python/backend
-docker build -t querygateway_hack:v1 .
-kind load docker-image querygateway_hack:v1 --name kind-cluster
-helm install backend-service backend_server-0.1.0.tgz
-```
-3) Follow the instructions in https://github.com/fybrik/hello-world-read-module#installation 
+
+2) Follow the instructions in https://github.com/fybrik/hello-world-read-module#installation 
 under the `Installation` section, brought here for convenience:  
    -  After modifying the values in the Makefile as required in the link above, 
       **make sure that the current directory is `fog-protect/`**. Invoke:  
@@ -113,20 +110,22 @@ under the `Installation` section, brought here for convenience:
       ```
 **Improtant note: make sure that the repositories where the docker image and the helm chart were pushed 
    are public**  
-4) Apply the RBAC for the fybrik manager:  
+3) Apply the RBAC for the fybrik manager:  
 ```shell
 kubectl apply -f fybrik-system-manager-rbac.yaml -n fybrik-system
 ```
-5) Apply all of the assets, along with the `secret` under the directory `fog-protect/assets` in the 
+4) Apply all of the assets, along with the `secret` under the directory `fog-protect/assets` in the 
 `forprotect` namespace (the current context of `kubectl`):  
 ```shell
 kubectl apply -f assets/
 ```
 
-6) Apply all of the secrets under the directory `fog-protect/assets` in the 
-`forprotect` namespace (the current context of `kubectl`):  
+5) Create all of the secrets under the directory `fog-protect/secrets` in the 
+`forprotect` namespace (the current context of `kubectl`), and afterwards create the `jwt_key_secret.yaml` in 
+the `fybrik-blueprints` namespace:  
 ```shell
 kubectl apply -f secrets/
+kubectl apply -n fybrik-blueprints -f secrets/jwt_key_secret.yaml
 ```
 **Note:** the secret `secrets/jwt_key_secret.yaml` contains the secret key used as the authentication key for the 
 JWT used between the rest filter and the frontend GUI, in order to change the key, you can invoke:  
@@ -151,18 +150,23 @@ kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559
 9) To build the image for the GUI and push it to the public images registry specified in the makefile, invoke the 
 following:
 ```shell
-make DOCKER_IMG_NAME=gui DOCKER_FILE=./gui/Dockerfile docker-all
-make DOCKER_CHART_IMG_NAME=factory-gui-chart DOCKER_IMG_NAME=gui DOCKER_FILE=./gui/Dockerfile CHART_PATH=./gui/helm helm-verify
-make DOCKER_CHART_IMG_NAME=factory-gui-chart DOCKER_IMG_NAME=gui DOCKER_FILE=./gui/Dockerfile CHART_PATH=./gui/helm helm-chart-push
+make DOCKER_IMG_NAME=factory-gui DOCKER_FILE=./gui/Dockerfile DOCKER_IMG_CONTEXT=./gui docker-all
+make DOCKER_CHART_IMG_NAME=factory-gui-chart DOCKER_IMG_NAME=factory-gui DOCKER_FILE=./gui/Dockerfile CHART_PATH=./gui/helm helm-verify
+make DOCKER_CHART_IMG_NAME=factory-gui-chart DOCKER_IMG_NAME=factory-gui DOCKER_FILE=./gui/Dockerfile CHART_PATH=./gui/helm helm-chart-push
 ```
 - To deploy the GUI pod invoke:
     ```shell
-    make DOCKER_CHART_IMG_NAME=factory-gui-chart DOCKER_IMG_NAME=gui DOCKER_FILE=./gui/Dockerfile CHART_PATH=./gui/helm helm-install
+    make DOCKER_CHART_IMG_NAME=factory-gui-chart DOCKER_IMG_NAME=factory-gui DOCKER_FILE=./gui/Dockerfile CHART_PATH=./gui/helm helm-install
+    kubectl wait --for=condition=ready --all pod --timeout=120s
     ```
-10) To build the image for the backend server and push it to the public images registry specified in the makefile, invoke the 
+  Create a port-forwarding to the GUI service:
+    ```shell
+    kubectl port-forward svc/factory-gui 3001:3000
+    ```
+10) To build the image for the backend server and push it to the public image registry specified in the makefile, invoke the 
 following:
 ```shell
-make DOCKER_IMG_NAME=backend-server DOCKER_FILE=./python/backend/Dockerfile docker-all
+make DOCKER_IMG_NAME=backend-server DOCKER_FILE=./python/backend/Dockerfile DOCKER_IMG_CONTEXT=./python/backend docker-all
 make DOCKER_CHART_IMG_NAME=backend-server-chart DOCKER_IMG_NAME=backend-server DOCKER_FILE=./python/backend/Dockerfile CHART_PATH=./python/backend/helm helm-verify
 make DOCKER_CHART_IMG_NAME=backend-server-chart DOCKER_IMG_NAME=backend-server DOCKER_FILE=./python/backend/Dockerfile CHART_PATH=./python/backend/helm helm-chart-push
 ```
@@ -170,3 +174,13 @@ make DOCKER_CHART_IMG_NAME=backend-server-chart DOCKER_IMG_NAME=backend-server D
   ```shell
   make DOCKER_CHART_IMG_NAME=backend-server-chart DOCKER_IMG_NAME=backend-server DOCKER_FILE=./python/backend/Dockerfile CHART_PATH=./python/backend/helm helm-install
   ```
+
+Another option instead of pushing the image to a public image registry is to build it locally and load it into the local
+cluster, to do that invoke the following:  
+```shell
+docker build -t backend_server:v1 .
+kind load docker-image backend_server:v1 --name kind-cluster
+helm install backend-service backend_server-0.1.0.tgz
+```
+
+11) Open a browser and go to: `http://127.0.0.1:3001` to use the GUI.  
