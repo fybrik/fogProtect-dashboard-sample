@@ -127,7 +127,7 @@ function generateJWTToken(role) {
     role: role
   };
 
-  return jwt.sign(payload, 'temp');
+  return jwt.sign(payload, process.env.JWT_KEY);
 }
 
 

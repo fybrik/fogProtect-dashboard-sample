@@ -4,15 +4,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.app.name }} 
+  name: {{ .Values.app.name }}
   labels:
-    app: {{ .Values.app.name }}  
-    service: {{ .Values.app.name }} 
+    app: {{ .Values.app.name }}
+    service: {{ .Values.app.name }}
 spec:
   ports:
-  - port: {{ .Values.service.port }} 
+  - port: {{ .Values.service.port }}
     name: http
-    targetPort: {{ .Values.app.port }} 
+    targetPort: {{ .Values.app.port }}
   type: {{ .Values.service.type }}
   selector:
     app: {{ .Values.app.name }}
@@ -20,18 +20,18 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.app.name }} 
+  name: {{ .Values.app.name }}
   labels:
-    app: {{ .Values.app.name }} 
+    app: {{ .Values.app.name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Values.app.name }} 
+      app: {{ .Values.app.name }}
   template:
     metadata:
       labels:
-        app: {{ .Values.app.name }} 
+        app: {{ .Values.app.name }}
     spec:
 {{- if .Values.persistence.enabled }}
       volumes:
@@ -41,11 +41,17 @@ spec:
 {{- end }}
       containers:
       - name: {{ .Values.app.name }}
-        image: {{ .Values.image.name }}  
+        image: {{ .Values.image.name }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
-        - name: http 
+        - name: http
           containerPort: {{ .Values.app.port }}
+        env:
+          - name: {{ .Values.jwtSecret.varName }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.jwtSecret.secretName }}
+                key: {{ .Values.jwtSecret.key }}
 
 {{- if .Values.persistence.enabled }}
         volumeMounts:

@@ -6,8 +6,8 @@ replicaCount: 1
 
 image:
 #  repository: 192.168.56.4:31965 
-  name: factory_gui:v1
-  pullPolicy: Never
+  name: ghcr.io/robshahla/factory_gui:v0.0.1
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart version.
   #tag: ""
 
@@ -57,6 +57,11 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+
+jwtSecret:
+  varName: JWT_KEY
+  secretName: jwt-key-secret
+  key: JWT_KEY
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

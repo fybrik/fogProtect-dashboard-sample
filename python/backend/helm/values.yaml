@@ -6,13 +6,13 @@ replicaCount: 1
 
 image:
 #  repository: 192.168.56.4:31965 
-  name: querygateway_hack:v1
-  pullPolicy: Never
+  name: ghcr.io/robshahla/backend-server:v0.0.1
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart version.
   #tag: ""
 
 app:
-  name: querygw
+  name: backend-server
   port: 9005
 
 imagePullSecrets: []
