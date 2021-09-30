@@ -1,4 +1,7 @@
 # FogProtect Usecase
+This is an application that demonstrates the use of [fybrik](https://github.com/fybrik/fybrik) and 
+leverages it to control the data flow between a webserver and a data server, where the webserver 
+sends HTTP requests to data server and the data server responds accordingly.
 ## Environment Build
 1) Follow the steps of the QuickStart Guide in: https://fybrik.io/v0.4/get-started/quickstart/.  
 Displayed here for convenience:  
@@ -108,7 +111,7 @@ under the `Installation` section, brought here for convenience:
       make helm-verify
       make helm-chart-push
       ```
-    **Improtant note: make sure that the repositories where the docker image and the helm chart were pushed 
+    **Improtant: make sure that the repositories where the docker image and the helm chart were pushed 
        are public**  
 3) Apply the RBAC for the fybrik manager:  
     ```shell
