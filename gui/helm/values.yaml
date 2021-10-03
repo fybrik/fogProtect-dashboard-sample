@@ -5,8 +5,8 @@
 replicaCount: 1
 
 image:
-#  repository: 192.168.56.4:31965 
-  name: ghcr.io/robshahla/factory_gui:v0.0.1
+#  repository: 192.168.56.4:31965
+  name: ghcr.io/robshahla/factory-gui:v0.0.1
   pullPolicy: Always
   # Overrides the image tag whose default is the chart version.
   #tag: ""
@@ -59,7 +59,7 @@ ingress:
   #      - chart-example.local
 
 jwtSecret:
-  varName: JWT_KEY
+  varName: REACT_APP_JWT_KEY
   secretName: jwt-key-secret
   key: JWT_KEY
 

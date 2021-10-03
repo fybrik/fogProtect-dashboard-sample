@@ -127,7 +127,7 @@ function generateJWTToken(role) {
     role: role
   };
 
-  return jwt.sign(payload, process.env.JWT_KEY);
+  return jwt.sign(payload, process.env.REACT_APP_JWT_KEY);
 }
 
 
@@ -216,17 +216,27 @@ class SafetyTable extends React.Component {
     };
 
     axios.get(this.state.url, { headers }, { timeout: 10 })
-        .then(response => this.setState({
-          error: null,
-          isLoaded: true,
-          safetyData: response.data,
-        }));
+        .then(response => {
+            this.setState({
+                error: null,
+                isLoaded: true,
+                safetyData: response.data,
+            })
+        }).catch(error => {
+        if (error.response) {
+            this.setState({
+                isLoaded: true,
+                safetyData: undefined,
+            })
+        }});
   }
 
   getRowValues(row, field) {
     const { url, error, isLoaded, safetyData } = this.state;
-    if(safetyData[row] !== undefined) {
+    if(safetyData !== undefined && safetyData[row] !== undefined) {
       return safetyData[row][field]
+    } else {
+      return null
     }
   }
 
