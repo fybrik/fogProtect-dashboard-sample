@@ -11,11 +11,24 @@ from a user trying to read/write data.
 - A frontend GUI/dashboard, which helps the user perform the HTTP 
 requests.
 
-### High Level Description
-Once the whole environment is built 
-(following the instructions below), a user can go to address
-`http://127.0.0.1:3001` in his desired browser, in order 
-to use the user-friendly GUI shown in the picture bellow.
+### High Level Flow Description
+Once the whole environment is built (following the instructions below), a user can visit address
+`http://127.0.0.1:3001` in his desired browser, in order to use the GUI shown in the picture bellow:  
+![Dashboard Picture](./dashboard-example.png)  
+
+The above dashboard demonstrates some of the capabilities of fybrik, and the source code of this project provides 
+a usage example of fybrik resources.  
+
+Looking at the dashboard, there are following elements:  
+- A "Role" roll down menu, where the user can choose either one of the roles: `Worker`, `Foreman` and `HR`. This 
+choice determines the read/write privileges of the user from the backend server and from this point forward all 
+of the HTTP request will contain this role in the header, so that the proxy server can retrieve it and decide what to 
+do next.  
+**passing the role to the proxy server:** The role is passed in a JWT and authenticated using a private key, the 
+proxy server decodes the JWT and validates the authentication using the same private key. In this case 
+the private key is stored in a `secret` in the cluster.  
+
+  
 ## Environment Build
 1) Follow the steps of the QuickStart Guide in: https://fybrik.io/v0.4/get-started/quickstart/.  
 Displayed here for convenience:  
@@ -58,6 +71,7 @@ Displayed here for convenience:
 ## Deployment
 1) Deploy the backend data server:
     ```shell
+    export HELM_EXPERIMENTAL_OCI=1
     helm chart pull ghcr.io/robshahla/backend-server-chart:v0.0.1
     helm chart export --destination=./tmp ghcr.io/robshahla/backend-server-chart:v0.0.1
     helm install rel1-backend-server ./tmp/backend_server
@@ -120,6 +134,7 @@ under the `Installation` section, brought here for convenience:
    -  After modifying the values in the Makefile as required in the link above, 
       **make sure that the current directory is `fog-protect/`**. Invoke:  
       ```shell
+      export HELM_EXPERIMENTAL_OCI=1
       make docker-build
       make docker-push
       make helm-login
