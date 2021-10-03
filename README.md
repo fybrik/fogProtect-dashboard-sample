@@ -1,7 +1,21 @@
 # FogProtect Usecase
 This is an application that demonstrates the use of [fybrik](https://github.com/fybrik/fybrik) and 
 leverages it to control the data flow between a webserver and a data server, where the webserver 
-sends HTTP requests to data server and the data server responds accordingly.
+sends HTTP requests to data server and the data server responds accordingly.  
+
+## Architecture
+The project contains 3 main components:  
+- A backend data server, responsible for reading/writing data.  
+- A proxy server, responsible for intercepting HTTP requests sent
+from a user trying to read/write data.  
+- A frontend GUI/dashboard, which helps the user perform the HTTP 
+requests.
+
+### High Level Description
+Once the whole environment is built 
+(following the instructions below), a user can go to address
+`http://127.0.0.1:3001` in his desired browser, in order 
+to use the user-friendly GUI shown in the picture bellow.
 ## Environment Build
 1) Follow the steps of the QuickStart Guide in: https://fybrik.io/v0.4/get-started/quickstart/.  
 Displayed here for convenience:  
@@ -72,9 +86,10 @@ the `fybrik-blueprints` namespace:
     ```shell
     kubectl apply -f rest-read-module.yaml -n fybrik-system
     kubectl apply -f rest-read-application.yaml
+    kubectl wait --for=condition=ready --all pod --timeout=120s
     ```
 
-6) Wait a couple of seconds after the last step, and then create a port-forwarding to the filter service:  
+6) Create a port-forwarding to the filter service:  
     ```shell
     kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559
     ```
@@ -145,8 +160,9 @@ the `fybrik-blueprints` namespace:
 7) Apply the application in the `fogprotect` namespace (current `kubectl` context):
     ```shell
     kubectl apply -f rest-read-application.yaml
+    kubectl wait --for=condition=ready --all pod --timeout=120s
     ```
-8) Wait a couple of seconds after the last step, and then create the port-forwarding:  
+8) Create the port-forwarding to the `rest-read` service:  
     ```shell
     kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559
     ```
@@ -177,13 +193,24 @@ following:
       ```shell
       make DOCKER_CHART_IMG_NAME=backend-server-chart DOCKER_IMG_NAME=backend-server DOCKER_FILE=./python/backend/Dockerfile CHART_PATH=./python/backend/helm helm-install
       ```  
-      
-    Another option instead of pushing the image to a public image registry is to build it locally and load it into the local
-    cluster, to do that invoke the following:
-     ```shell
-     docker build -t backend_server:v1 .
-     kind load docker-image backend_server:v1 --name kind-cluster
-     helm install backend-service backend_server-0.1.0.tgz
-     ```
+
+Another option instead of pushing the images to a public image registry is to build them locally and load them into the local
+cluster, to do that first change the value of the variable `image.name` to `<image_name>:<tag>` in the relevant 
+`values.yaml` file related to the helm chart being deployed, and then invoke the following:
+```shell
+docker build -t <image_name>:<tag> .
+kind load docker-image <image_name>:<tag> --name kind-cluster
+helm package <your_helm_directory>
+helm install <your_chart_name> <your_package_name.tgz>
+```  
+For example, to build the backend server locally, change the value of the variable `image.name` to `backend_server:v1` in the file
+`python/backend/helm/values.yaml` and then invoke the following:
+```shell
+cd python/backend
+docker build -t backend_server:v1 .
+kind load docker-image backend_server:v1 --name kind-cluster
+helm package helm/
+helm install backend-service backend_server-0.1.0.tgz
+```
 
 11) Open a browser and go to: `http://127.0.0.1:3001` to use the GUI.  
