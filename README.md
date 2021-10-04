@@ -21,12 +21,13 @@ a usage example of fybrik resources.
 
 Looking at the dashboard, there are following elements:  
 - A "Role" roll down menu, where the user can choose either one of the roles: `Worker`, `Foreman` and `HR`. This 
-choice determines the read/write privileges of the user from the backend server and from this point forward all 
-of the HTTP request will contain this role in the header, so that the proxy server can retrieve it and decide what to 
-do next.  
+choice determines the read/write privileges of the user from the backend server, and from this point forward all 
+of the HTTP requests sent from the GUI to the proxy will contain this role in the header, so that 
+the proxy server can retrieve it and decide what to do next.  
 **passing the role to the proxy server:** The role is passed in a JWT and authenticated using a private key, the 
 proxy server decodes the JWT and validates the authentication using the same private key. In this case 
 the private key is stored in a `secret` in the cluster.  
+- A "START ROBOT" and "STOP ROBOT" buttons which control the robot working in the factory, 
 
   
 ## Environment Build

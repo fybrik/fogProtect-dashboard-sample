@@ -88,8 +88,7 @@ def get_safety_data():
     non_production_sector = [get_random_number(), get_random_number()]
     non_production_sector += [non_production_sector[0] + non_production_sector[1]]
 
-    full_area = [get_random_number(), get_random_number()]
-    full_area += [full_area[0] + full_area[1]]
+    full_area = [production_sector[i] + non_production_sector[i] for i in range(len(production_sector))]
 
     jdf = """{
             "time": \"""" + str(current_time()) + """\",
