@@ -45,12 +45,12 @@ jobs:
     #   name: Infer version
     #   run: echo ::set-output name=version::${GITHUB_REF#refs/*/}
     # - run: docker images
-    - name: Helm login
-      # if: ${{ github.event_name != 'pull_request' }}
-      run: export HELM_EXPERIMENTAL_OCI=1 && echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login -u "fybrik" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
-    - name: Helm chart push
-      # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
-      run: make helm-push
+    # - name: Helm login
+    #   # if: ${{ github.event_name != 'pull_request' }}
+    #   run: export HELM_EXPERIMENTAL_OCI=1 && echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login -u "fybrik" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
+    # - name: Helm chart push
+    #   # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
+    #   run: make helm-push
 
 
     - name: Build GUI image 
@@ -70,3 +70,5 @@ jobs:
     - name: Docker push
       # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
       run: export DOCKER_IMG_NAME=backend-server && export DOCKER_FILE=./python/backend/Dockerfile && export DOCKER_IMG_CONTEXT=./python/backend && make docker-push
+    - name: Helm backend chart push
+      run: export DOCKER_IMG_NAME=backend-server && export DOCKER_FILE=./python/backend/Dockerfile && export DOCKER_IMG_CONTEXT=./python/backend && make helm-push
