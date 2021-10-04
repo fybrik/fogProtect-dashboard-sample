@@ -1,7 +1,7 @@
-export DOCKER_USERNAME ?= robshahla
+export DOCKER_USERNAME ?= fybrik
 export DOCKER_PASSWORD ?=
 export DOCKER_HOSTNAME ?= ghcr.io
-export DOCKER_NAMESPACE ?= robshahla
+export DOCKER_NAMESPACE ?= fybrik
 export DOCKER_TAGNAME ?= v0.0.1
 
 DOCKER_IMG_NAME ?= rest-read-module
