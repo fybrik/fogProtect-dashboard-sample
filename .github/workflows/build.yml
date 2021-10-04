@@ -52,7 +52,8 @@ jobs:
     #   # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
     #   run: make helm-push
 
-
+    - name: test helm
+      run: helm chart save ./rest-read-module ghcr.io/fybrik/rest-read-module-chart:v0.0.2
     - name: Build GUI image 
       run: export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export DOCKER_IMG_CONTEXT=./gui && make docker-build
     - name: Docker login
