@@ -50,7 +50,7 @@ jobs:
       run: export HELM_EXPERIMENTAL_OCI=1 && echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login -u "${{ github.actor }}" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
     - name: Helm chart push
       # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
-      run: make chart-push
+      run: make helm-chart-push
 
 
     - name: Build GUI image 
