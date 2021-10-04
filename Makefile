@@ -71,7 +71,7 @@ helm-chart-push: helm-login
 
 .PHONY: helm-push
 helm-push:
-	helm chart save ${CHART} ${CHART_IMG}
+	# helm chart save ${CHART} ${CHART_IMG}
 	helm chart push ${CHART_IMG}
 	helm chart remove ${CHART_IMG}
 

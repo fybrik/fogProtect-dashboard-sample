@@ -45,15 +45,13 @@ jobs:
     #   name: Infer version
     #   run: echo ::set-output name=version::${GITHUB_REF#refs/*/}
     # - run: docker images
-    # - name: Helm login
-    #   # if: ${{ github.event_name != 'pull_request' }}
-    #   run: export HELM_EXPERIMENTAL_OCI=1 && echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login -u "fybrik" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
-    # - name: Helm chart push
-    #   # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
-    #   run: make helm-push
+    - name: Helm login
+      # if: ${{ github.event_name != 'pull_request' }}
+      run: export HELM_EXPERIMENTAL_OCI=1 && echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login -u "fybrik" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
+    - name: Helm chart push
+      # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
+      run: make helm-push
 
-    - name: test helm
-      run: helm chart save ./rest-read-module ghcr.io/fybrik/rest-read-module-chart:v0.0.2
     - name: Build GUI image 
       run: export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export DOCKER_IMG_CONTEXT=./gui && make docker-build
     - name: Docker login
@@ -62,6 +60,9 @@ jobs:
     - name: Docker push
       # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
       run: export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export DOCKER_IMG_CONTEXT=./gui && make docker-push
+    - name: Helm GUI chart push
+      # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
+      run: export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export DOCKER_IMG_CONTEXT=./gui && make helm-push
 
     - name: Build backend image 
       run: export DOCKER_IMG_NAME=backend-server && export DOCKER_FILE=./python/backend/Dockerfile && export DOCKER_IMG_CONTEXT=./python/backend && make docker-build
