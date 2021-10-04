@@ -66,9 +66,9 @@ jobs:
     - name: Docker push
       # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
       run: export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export DOCKER_IMG_CONTEXT=./gui && make docker-push
-    - name: Helm GUI chart push
-      # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
-      run: export DOCKER_CHART_IMG_NAME=factory-gui-chart && export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export CHART_PATH=./gui/helm && make helm-push
+    # - name: Helm GUI chart push
+    #   # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
+    #   run: export DOCKER_CHART_IMG_NAME=factory-gui-chart && export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export CHART_PATH=./gui/helm && make helm-push
 
     - name: Build backend image 
       run: export DOCKER_IMG_NAME=backend-server && export DOCKER_FILE=./python/backend/Dockerfile && export DOCKER_IMG_CONTEXT=./python/backend && make docker-build
