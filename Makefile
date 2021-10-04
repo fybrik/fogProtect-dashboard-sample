@@ -7,7 +7,8 @@ export DOCKER_TAGNAME ?= v0.0.1
 DOCKER_IMG_NAME ?= rest-read-module
 DOCKER_CHART_IMG_NAME ?= rest-read-module-chart
 DOCKER_FILE ?= ./python/Dockerfile
-DOCKER_CONTEXT ?= ./python
+DOCKER_IMG_CONTEXT ?= ./python
+CHART_PATH ?= ./rest-read-module
 
 APP_IMG ?= ${DOCKER_HOSTNAME}/${DOCKER_NAMESPACE}/${DOCKER_IMG_NAME}:${DOCKER_TAGNAME}
 CHART_IMG ?= ${DOCKER_HOSTNAME}/${DOCKER_NAMESPACE}/${DOCKER_CHART_IMG_NAME}:${DOCKER_TAGNAME}
@@ -17,7 +18,7 @@ docker-all: docker-build docker-push
 
 .PHONY: docker-build
 docker-build:
-	docker build $(DOCKER_CONTEXT) -t ${APP_IMG} -f $(DOCKER_FILE) --no-cache
+	docker build $(DOCKER_IMG_CONTEXT) -t ${APP_IMG} -f $(DOCKER_FILE) --no-cache
 
 .PHONY: docker-push
 docker-push:
@@ -34,7 +35,7 @@ docker-rmi:
 
 HELM_VALUES ?=
 
-CHART := ${DOCKER_IMG_NAME}
+CHART := ${CHART_PATH}
 HELM_RELEASE ?= rel1-${DOCKER_IMG_NAME}
 TEMP := /tmp
 
