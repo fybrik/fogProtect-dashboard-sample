@@ -51,3 +51,11 @@ jobs:
     # - name: Helm chart push
     #   if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
     #   run: export HELM_REPOSITORY=ghcr.io/fybrik/arrow-flight-module-chart && make chart-push
+    - name: Build GUI image 
+      run: export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export DOCKER_IMG_CONTEXT=./gui && make docker-build
+    - name: Docker login
+      # if: ${{ github.event_name != 'pull_request' }}
+      run: export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export DOCKER_IMG_CONTEXT=./gui && echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u "fybrik" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
+    - name: Docker push
+      # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
+      run: export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export DOCKER_IMG_CONTEXT=./gui && make docker-push
