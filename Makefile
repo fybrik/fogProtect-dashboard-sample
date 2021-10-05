@@ -1,7 +1,7 @@
-export DOCKER_USERNAME ?= robshahla
+export DOCKER_USERNAME ?= fybrik
 export DOCKER_PASSWORD ?=
 export DOCKER_HOSTNAME ?= ghcr.io
-export DOCKER_NAMESPACE ?= robshahla
+export DOCKER_NAMESPACE ?= fybrik
 export DOCKER_TAGNAME ?= v0.0.1
 
 DOCKER_IMG_NAME ?= rest-read-module
@@ -68,6 +68,12 @@ helm-chart-push: helm-login
 	helm chart push ${CHART_IMG}
 	helm chart remove ${CHART_IMG}
 	helm uninstall ${HELM_RELEASE} || true
+
+.PHONY: helm-push
+helm-push:
+	helm chart save ${CHART} ${CHART_IMG}
+	helm chart push ${CHART_IMG}
+	helm chart remove ${CHART_IMG}
 
 .PHONY: helm-chart-pull
 helm-chart-pull: helm-login

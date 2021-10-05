@@ -1,0 +1,82 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - githubActions
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - main
+      - githubActions
+
+env:
+  DOCKER_HOSTNAME: ghcr.io
+  HELM_VERSION_TO_INSTALL: 3.6.3
+
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel twine
+        pip install pipenv
+    - name: install helm
+      uses: Azure/setup-helm@v1
+      with:
+        # Version of helm
+        version: ${{ env.HELM_VERSION_TO_INSTALL }} # default is latest
+        
+    - name: Build docker image 
+      run: make docker-build
+    - name: Docker login
+      # if: ${{ github.event_name != 'pull_request' }}
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u "fybrik" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
+    - name: Docker push
+      # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
+      run: make docker-push
+    # - id: version
+    #   name: Infer version
+    #   run: echo ::set-output name=version::${GITHUB_REF#refs/*/}
+    # - run: docker images
+    # - name: Helm login
+    #   # if: ${{ github.event_name != 'pull_request' }}
+    #   run: export HELM_EXPERIMENTAL_OCI=1 && echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login -u "fybrik" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
+    # - name: Helm chart push
+    #   # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
+    #   run: make helm-push
+    
+
+    - name: Build GUI image 
+      run: export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export DOCKER_IMG_CONTEXT=./gui && make docker-build
+    - name: Docker login
+      # if: ${{ github.event_name != 'pull_request' }}
+      run: export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export DOCKER_IMG_CONTEXT=./gui && echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u "fybrik" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
+    - name: Docker push
+      # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
+      run: export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export DOCKER_IMG_CONTEXT=./gui && make docker-push
+    # - name: Helm GUI chart push
+    #   run: export DOCKER_CHART_IMG_NAME=factory-gui-chart && export DOCKER_IMG_NAME=factory-gui && export DOCKER_FILE=./gui/Dockerfile && export CHART_PATH=./gui/helm && make helm-push
+
+    - name: Build backend image 
+      run: export DOCKER_IMG_NAME=backend-server && export DOCKER_FILE=./python/backend/Dockerfile && export DOCKER_IMG_CONTEXT=./python/backend && make docker-build
+    - name: Docker login
+      # if: ${{ github.event_name != 'pull_request' }}
+      run: export DOCKER_IMG_NAME=backend-server && export DOCKER_FILE=./python/backend/Dockerfile && export DOCKER_IMG_CONTEXT=./python/backend && echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u "fybrik" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
+    - name: Docker push
+      # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
+      run: export DOCKER_IMG_NAME=backend-server && export DOCKER_FILE=./python/backend/Dockerfile && export DOCKER_IMG_CONTEXT=./python/backend && make docker-push
+    # - name: Helm backend chart push
+    #   run: export DOCKER_CHART_IMG_NAME=backend-server-chart && export DOCKER_IMG_NAME=backend-server && export DOCKER_FILE=./python/backend/Dockerfile && export CHART_PATH=./python/backend/helm && make helm-push
