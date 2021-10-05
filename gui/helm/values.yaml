@@ -5,6 +5,7 @@
 replicaCount: 1
 
 image:
+
 #  repository: 192.168.56.4:31965
   name: ghcr.io/robshahla/factory-gui:v0.0.1
   pullPolicy: Always
