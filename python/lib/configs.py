@@ -1,3 +1,7 @@
+#
+# Copyright 2021 IBM Corp.
+# SPDX-License-Identifier: Apache-2.0
+#
 import os
 import kofiko
 from kofiko import config_section
