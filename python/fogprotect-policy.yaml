@@ -47,5 +47,14 @@ data:
                     ],
                     "partial_eval":{}},
                 "policy":"Block getting robot and manufacturing data for HR"
+    },
+    {"action": {"name":"Allow",
+            "columns":"\"\"",
+            "runtime_eval":["input.request.role == \"hr\"",
+                            "asset := assets[input.request.asset.namespace][input.request.asset.name]",
+                            "asset.spec.assetMetadata.tags[_] == \"personnel\""
+                        ],
+                        "partial_eval":{}},
+                    "policy":"Allow getting personnel data for HR"
     }
     ]

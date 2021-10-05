@@ -1,3 +1,7 @@
+#
+# Copyright 2021 IBM Corp.
+# SPDX-License-Identifier: Apache-2.0
+#
 import json
 import jwt
 import os

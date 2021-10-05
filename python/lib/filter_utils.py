@@ -1,3 +1,7 @@
+#
+# Copyright 2021 IBM Corp.
+# SPDX-License-Identifier: Apache-2.0
+#
 import json
 import logging
 from .log_utils import init_root_logger

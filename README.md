@@ -1,7 +1,35 @@
 # FogProtect Usecase
 This is an application that demonstrates the use of [fybrik](https://github.com/fybrik/fybrik) and 
 leverages it to control the data flow between a webserver and a data server, where the webserver 
-sends HTTP requests to data server and the data server responds accordingly.
+sends HTTP requests to data server and the data server responds accordingly.  
+
+## Architecture
+The project contains 3 main components:  
+- A backend data server, responsible for reading/writing data.  
+- A proxy server, responsible for intercepting HTTP requests sent
+from a user trying to read/write data.  
+- A frontend GUI/dashboard, which helps the user perform the HTTP 
+requests.
+
+### High Level Flow Description
+Once the whole environment is built (following the instructions below), a user can visit address
+`http://127.0.0.1:3001` in his desired browser, in order to use the GUI shown in the picture bellow:  
+![Dashboard Picture](./dashboard-example.png)  
+
+The above dashboard demonstrates some of the capabilities of fybrik, and the source code of this project provides 
+a usage example of fybrik resources.  
+
+Looking at the dashboard, there are following elements:  
+- A "Role" roll down menu, where the user can choose either one of the roles: `Worker`, `Foreman` and `HR`. This 
+choice determines the read/write privileges of the user from the backend server, and from this point forward all 
+of the HTTP requests sent from the GUI to the proxy will contain this role in the header, so that 
+the proxy server can retrieve it and decide what to do next.  
+**passing the role to the proxy server:** The role is passed in a JWT and authenticated using a private key, the 
+proxy server decodes the JWT and validates the authentication using the same private key. In this case 
+the private key is stored in a `secret` in the cluster.  
+- A "START ROBOT" and "STOP ROBOT" buttons which control the robot working in the factory, 
+
+  
 ## Environment Build
 1) Follow the steps of the QuickStart Guide in: https://fybrik.io/v0.4/get-started/quickstart/.  
 Displayed here for convenience:  
@@ -44,6 +72,7 @@ Displayed here for convenience:
 ## Deployment
 1) Deploy the backend data server:
     ```shell
+    export HELM_EXPERIMENTAL_OCI=1
     helm chart pull ghcr.io/robshahla/backend-server-chart:v0.0.1
     helm chart export --destination=./tmp ghcr.io/robshahla/backend-server-chart:v0.0.1
     helm install rel1-backend-server ./tmp/backend_server
@@ -72,9 +101,10 @@ the `fybrik-blueprints` namespace:
     ```shell
     kubectl apply -f rest-read-module.yaml -n fybrik-system
     kubectl apply -f rest-read-application.yaml
+    kubectl wait --for=condition=ready --all pod --timeout=120s
     ```
 
-6) Wait a couple of seconds after the last step, and then create a port-forwarding to the filter service:  
+6) Create a port-forwarding to the filter service:  
     ```shell
     kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559
     ```
@@ -105,6 +135,7 @@ under the `Installation` section, brought here for convenience:
    -  After modifying the values in the Makefile as required in the link above, 
       **make sure that the current directory is `fog-protect/`**. Invoke:  
       ```shell
+      export HELM_EXPERIMENTAL_OCI=1
       make docker-build
       make docker-push
       make helm-login
@@ -145,8 +176,9 @@ the `fybrik-blueprints` namespace:
 7) Apply the application in the `fogprotect` namespace (current `kubectl` context):
     ```shell
     kubectl apply -f rest-read-application.yaml
+    kubectl wait --for=condition=ready --all pod --timeout=120s
     ```
-8) Wait a couple of seconds after the last step, and then create the port-forwarding:  
+8) Create the port-forwarding to the `rest-read` service:  
     ```shell
     kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559
     ```
@@ -177,13 +209,24 @@ following:
       ```shell
       make DOCKER_CHART_IMG_NAME=backend-server-chart DOCKER_IMG_NAME=backend-server DOCKER_FILE=./python/backend/Dockerfile CHART_PATH=./python/backend/helm helm-install
       ```  
-      
-    Another option instead of pushing the image to a public image registry is to build it locally and load it into the local
-    cluster, to do that invoke the following:
-     ```shell
-     docker build -t backend_server:v1 .
-     kind load docker-image backend_server:v1 --name kind-cluster
-     helm install backend-service backend_server-0.1.0.tgz
-     ```
+
+Another option instead of pushing the images to a public image registry is to build them locally and load them into the local
+cluster, to do that first change the value of the variable `image.name` to `<image_name>:<tag>` in the relevant 
+`values.yaml` file related to the helm chart being deployed, and then invoke the following:
+```shell
+docker build -t <image_name>:<tag> .
+kind load docker-image <image_name>:<tag> --name kind-cluster
+helm package <your_helm_directory>
+helm install <your_chart_name> <your_package_name.tgz>
+```  
+For example, to build the backend server locally, change the value of the variable `image.name` to `backend_server:v1` in the file
+`python/backend/helm/values.yaml` and then invoke the following:
+```shell
+cd python/backend
+docker build -t backend_server:v1 .
+kind load docker-image backend_server:v1 --name kind-cluster
+helm package helm/
+helm install backend-service backend_server-0.1.0.tgz
+```
 
 11) Open a browser and go to: `http://127.0.0.1:3001` to use the GUI.  
