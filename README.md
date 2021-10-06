@@ -33,21 +33,21 @@ the private key is stored in a `secret` in the cluster.
 ## Environment Build
 1) Follow the steps of the QuickStart Guide in: https://fybrik.io/v0.4/get-started/quickstart/.  
 Displayed here for convenience:  
-   1) ```
+   1) ```shell
       kind create cluster --name kind-cluster
-   2) ```
+   2) ```shell
       helm repo add jetstack https://charts.jetstack.io 
       helm repo add hashicorp https://helm.releases.hashicorp.com 
       helm repo add fybrik-charts https://fybrik.github.io/charts 
       helm repo update
-   3) ```
+   3) ```shell
       helm install cert-manager jetstack/cert-manager \
       --namespace cert-manager \
       --version v1.2.0 \
       --create-namespace \
       --set installCRDs=true \
       --wait --timeout 120s
-   4) ```
+   4) ```shell
       git clone https://github.com/fybrik/fybrik.git
       cd fybrik
       helm dependency update charts/vault
@@ -56,9 +56,9 @@ Displayed here for convenience:
       --set "vault.server.dev.enabled=true" \
       --values charts/vault/env/dev/vault-single-cluster-values.yaml
       kubectl wait --for=condition=ready --all pod -n fybrik-system --timeout=120s
-   5) ```
+   5) ```shell
       helm install fybrik-crd charts/fybrik-crd -n fybrik-system --wait
-      helm install fybrik charts/fybrik --set global.tag=latest -n fybrik-system --wait
+      helm install fybrik charts/fybrik --set global.tag=master -n fybrik-system --wait
    6) Change the current directory to the previous directory:
    ```shell
    cd ..
@@ -73,56 +73,85 @@ Displayed here for convenience:
 1) Deploy the backend data server:
     ```shell
     export HELM_EXPERIMENTAL_OCI=1
-    helm chart pull ghcr.io/robshahla/backend-server-chart:v0.0.1
-    helm chart export --destination=./tmp ghcr.io/robshahla/backend-server-chart:v0.0.1
+    helm chart pull ghcr.io/fybrik/backend-server-chart:v0.0.1
+    helm chart export --destination=./tmp ghcr.io/fybrik/backend-server-chart:v0.0.1
     helm install rel1-backend-server ./tmp/backend_server
     ```
 
 2) Create the assets:
     ```shell
-    wget assets...
-    kubectl apply -f assets/
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/assets/asset_get_safety_data.yaml
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/assets/asset_start_robot.yaml
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/assets/asset_stop_robot.yaml
     ```  
+
 3) Create all of the secrets under the directory `fog-protect/secrets` in the 
 `forprotect` namespace (the current context of `kubectl`), and afterwards create the `jwt_key_secret.yaml` in 
 the `fybrik-blueprints` namespace:  
     ```shell
-    kubectl apply -f secrets/
-    kubectl apply -n fybrik-blueprints -f secrets/jwt_key_secret.yaml
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/start_robot_secret.yaml
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
+    kubectl apply -n fybrik-blueprints -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
     ```
 
 4) Create the RBAC for the fybrik manager so that the manager can list the assets and other resources:  
     ```shell
-    wget rbac...
-    kubectl apply -f fybrik-system-manager-rbac.yaml -n fybrik-system
+    kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-system-manager-rbac.yaml
     ```
 
 5) Deploy the filter pod:
     ```shell
-    kubectl apply -f rest-read-module.yaml -n fybrik-system
-    kubectl apply -f rest-read-application.yaml
+    kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/rest-read-module.yaml
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/rest-read-application.yaml
     kubectl wait --for=condition=ready --all pod --timeout=120s
     ```
 
 6) Create a port-forwarding to the filter service:  
     ```shell
-    kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559
+    kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559 &
     ```
 
 7) Deploy the pod of the GUI:
     ```shell
-    helm chart pull ghcr.io/robshahla/factory-gui-chart:v0.0.1
-    helm chart export --destination=./tmp ghcr.io/robshahla/factory-gui-chart:v0.0.1
+    helm chart pull ghcr.io/fybrik/factory-gui-chart:v0.0.1
+    helm chart export --destination=./tmp ghcr.io/fybrik/factory-gui-chart:v0.0.1
     helm install rel1-factory-gui ./tmp/factory_gui
     kubectl wait --for=condition=ready --all pod --timeout=120s
     ```
 
 8) Create a port-forwarding to the GUI service:
     ```shell
-    kubectl port-forward svc/factory-gui 3001:3000
+    kubectl port-forward svc/factory-gui 3001:3000 &
     ```  
 
 9) Open a browser and go to: `http://127.0.0.1:3001` to use the GUI.  
+
+### Cleanup
+1. Stop the port-forwarding:
+    ```shell
+    pgrep -f "kubectl port-forward svc/factory-gui 3001:3000" | xargs kill
+    pgrep -f "kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559" | xargs kill
+    ```
+2. Remove the `tmp` directory:
+    ```shell
+    rm -r tmp
+    ```
+3. Delete the `fogprotect` namespace:  
+    ```shell
+    kubectl delete namespace fogprotect
+    ```
+4. Delete the module:  
+    ```shell
+    kubectl -n fybrik-system delete fybrikmodule rest-read-module
+    ```
+5. Delete the RBAC authorization of the manager:  
+    ```shell
+    kubectl -n fybrik-system delete -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-system-manager-rbac.yaml
+    ```
+6. Delete the JWT secret:  
+    ```shell
+    kubectl delete -n fybrik-blueprints -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
+    ```
 
 ## Development
 1) Clone this repository:  
