@@ -5,11 +5,9 @@ sends HTTP requests to data server and the data server responds accordingly.
 
 ## Architecture
 The project contains 3 main components:  
-- A backend data server, responsible for reading/writing data.  
-- A proxy server, responsible for intercepting HTTP requests sent
-from a user trying to read/write data.  
-- A frontend GUI/dashboard, which helps the user perform the HTTP 
-requests.
+- A backend data service, which provides the mock data for the dashboard.  
+- A fybrik module, responsible for intercepting HTTP requests sent from a user trying to read or write data.  
+- A dashboard application, which performs HTTP requests and displays the responses for the user.
 
 ### High Level Flow Description
 Once the whole environment is built (following the instructions below), a user can visit address
@@ -24,10 +22,38 @@ Looking at the dashboard, there are following elements:
 choice determines the read/write privileges of the user from the backend server, and from this point forward all 
 of the HTTP requests sent from the GUI to the proxy will contain this role in the header, so that 
 the proxy server can retrieve it and decide what to do next.  
-**passing the role to the proxy server:** The role is passed in a JWT and authenticated using a private key, the 
-proxy server decodes the JWT and validates the authentication using the same private key. In this case 
+**passing the role to the proxy server:** The role is passed in a JWT and authenticated using a secret key, the 
+proxy server decodes the JWT and validates the authentication using the same secret key. In this case 
 the private key is stored in a `secret` in the cluster.  
-- A "START ROBOT" and "STOP ROBOT" buttons which control the robot working in the factory, 
+- A "START ROBOT" and "STOP ROBOT" buttons which control the robot working in the factory, only a foreman is allowed
+to control the robot, other roles have no such privilege and their request will be blocked by the fybrik module.  
+- A safety table, which contains the data defined in the asset `assets/asset_get_safety_data.yaml`. This data
+contains the number of employees in each area in the factory, and the number of employees wearing/not wearing helmets.  
+
+#### ِAn Example of a Request
+Assume a user with a worker role who would like to look at the safety data of the factory. The user sends an HTTP 
+request to the URL: `http://127.0.0.1:5559/api/personnel_data/get_safety_data` (after creating the port-forwarding 
+as discussed in the [Deployment](#Deployment) section below), while specifying his role in the header of the request. 
+The role can be either passed explicitly, or encoded as a JWT (if it is encoded using JWT, then it should be authenticated 
+using the secret key specified in `secrets/jwt_key_secret.yaml` in order for the module to verify it using the same key).  
+Once the service intercepting the HTTP requests (defined by the module) receives this request, it would need to make 
+a decision on what action to do next. For this purpose, the intercepting process sends the name of the asset requested, 
+along with the role of the user to the [OPA](https://www.openpolicyagent.org) sidecar, which has the policies that 
+should be applied. Based on the policies OPA returns a response to the intercepting process that contains a list 
+of actions that should be applied in this case, these actions might be one the following:  
+- ALLOW - meaning that the intercepting process should get the data from the backend data service, without having 
+to change anything in the data, and sending it back to the user as is.  
+- REDACT - meaning that the intercepting process should get the data from the backend data service, however before 
+returning a response to the user, the data should be modified, and following the defined policies, the process would 
+have a list of columns (rows not yet supported) in the data (`csv` format) that should be redacted for this specific 
+role of the user (this list would be received from OPA along with the action that should be made). Once the process 
+goes over the data and modifies it accordingly, it sends a response back to the user containing the modified data.  
+- BLOCK - meaning that the intercepting process will not forward the request to the backend data service, and it 
+will respond to the user with a status of "access forbidden".  
+
+Following the example, in our case the intercepting process will receive a REDACT action from OPA with a list of 
+columns that should be redacted. Next, the process will send an HTTP request to the backend data service requesting 
+the needed data. Once the data is received, the process redacts the columns and returns a response to the user.  
 
   
 ## Environment Build
@@ -96,7 +122,7 @@ Displayed here for convenience:
     kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-system-manager-rbac.yaml
     ```
 
-5) Deploy the filter pod:
+5) Deploy the fybrik module and application:
     ```shell
     kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/rest-read-module.yaml
     kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/rest-read-application.yaml
