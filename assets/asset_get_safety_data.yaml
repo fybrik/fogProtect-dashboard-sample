@@ -4,13 +4,13 @@ metadata:
   name: api.personnel-data.get-safety-data
 spec:
   secretRef:
-    name: start-robot-secret
+    name: ""
   assetDetails:
     dataFormat: csv
     connection:
       type: s3
       s3:
-        endpoint: "http://127.0.0.1:5559/api/control/start_robot"
+        endpoint: "http://127.0.0.1:5559/api/personnel_data/get_safety_data"
         bucket: demo
         objectKey: "hello"
   assetMetadata:
