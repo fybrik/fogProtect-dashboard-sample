@@ -85,11 +85,8 @@ Displayed here for convenience:
     kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/assets/asset_stop_robot.yaml
     ```  
 
-3) Create all of the secrets under the directory `fog-protect/secrets` in the 
-`forprotect` namespace (the current context of `kubectl`), and afterwards create the `jwt_key_secret.yaml` in 
-the `fybrik-blueprints` namespace:  
+3) Create the `jwt_key_secret.yaml` in both in the `fogprotect` and `fybrik-blueprints` namespaces:  
     ```shell
-    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/start_robot_secret.yaml
     kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
     kubectl apply -n fybrik-blueprints -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
     ```
@@ -177,17 +174,15 @@ under the `Installation` section, brought here for convenience:
     ```shell
     kubectl apply -f fybrik-system-manager-rbac.yaml -n fybrik-system
     ```
-4) Apply all of the assets, along with the `secret` under the directory `fog-protect/assets` in the 
-`forprotect` namespace (the current context of `kubectl`):  
+4) Apply all of the assets in the `forprotect` namespace (the current context of `kubectl`):  
     ```shell
     kubectl apply -f assets/
     ```
 
-5) Create all of the secrets under the directory `fog-protect/secrets` in the 
-`forprotect` namespace (the current context of `kubectl`), and afterwards create the `jwt_key_secret.yaml` in 
-the `fybrik-blueprints` namespace:  
+5) Create the `jwt_key_secret.yaml` secret under the directory `fog-protect/secrets` in the 
+`forprotect` namespace (the current context of `kubectl`), and also in the `fybrik-blueprints` namespace:  
     ```shell
-    kubectl apply -f secrets/
+    kubectl apply -f secrets/jwt_key_secret.yaml
     kubectl apply -n fybrik-blueprints -f secrets/jwt_key_secret.yaml
     ```
     **Note:** the secret `secrets/jwt_key_secret.yaml` contains the secret key used as the authentication key for the 

@@ -4,7 +4,7 @@ metadata:
   name: api.data.read-data
 spec:
   secretRef:
-    name: start-robot-secret
+    name: ""
   assetDetails:
     dataFormat: csv
     connection:
