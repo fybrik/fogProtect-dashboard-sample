@@ -5,11 +5,9 @@ sends HTTP requests to data server and the data server responds accordingly.
 
 ## Architecture
 The project contains 3 main components:  
-- A backend data server, responsible for reading/writing data.  
-- A proxy server, responsible for intercepting HTTP requests sent
-from a user trying to read/write data.  
-- A frontend GUI/dashboard, which helps the user perform the HTTP 
-requests.
+- A backend data service, which provides the mock data for the dashboard.  
+- A fybrik module, responsible for intercepting HTTP requests sent from a user trying to read or write data.  
+- A dashboard application, which performs HTTP requests and displays the responses for the user.
 
 ### High Level Flow Description
 Once the whole environment is built (following the instructions below), a user can visit address
@@ -24,30 +22,58 @@ Looking at the dashboard, there are following elements:
 choice determines the read/write privileges of the user from the backend server, and from this point forward all 
 of the HTTP requests sent from the GUI to the proxy will contain this role in the header, so that 
 the proxy server can retrieve it and decide what to do next.  
-**passing the role to the proxy server:** The role is passed in a JWT and authenticated using a private key, the 
-proxy server decodes the JWT and validates the authentication using the same private key. In this case 
+**passing the role to the proxy server:** The role is passed in a JWT and authenticated using a secret key, the 
+proxy server decodes the JWT and validates the authentication using the same secret key. In this case 
 the private key is stored in a `secret` in the cluster.  
-- A "START ROBOT" and "STOP ROBOT" buttons which control the robot working in the factory, 
+- A "START ROBOT" and "STOP ROBOT" buttons which control the robot working in the factory, only a foreman is allowed
+to control the robot, other roles have no such privilege and their request will be blocked by the fybrik module.  
+- A safety table, which contains the data defined in the asset `assets/asset_get_safety_data.yaml`. This data
+contains the number of employees in each area in the factory, and the number of employees wearing/not wearing helmets.  
+
+#### ِAn Example of a Request
+Assume a user with a worker role who would like to look at the safety data of the factory. The user sends an HTTP 
+request to the URL: `http://127.0.0.1:5559/api/personnel_data/get_safety_data` (after creating the port-forwarding 
+as discussed in the [Deployment](#Deployment) section below), while specifying his role in the header of the request. 
+The role can be either passed explicitly, or encoded as a JWT (if it is encoded using JWT, then it should be authenticated 
+using the secret key specified in `secrets/jwt_key_secret.yaml` in order for the module to verify it using the same key).  
+Once the service intercepting the HTTP requests (defined by the module) receives this request, it would need to make 
+a decision on what action to do next. For this purpose, the intercepting process sends the name of the asset requested, 
+along with the role of the user to the [OPA](https://www.openpolicyagent.org) sidecar, which has the policies that 
+should be applied. Based on the policies OPA returns a response to the intercepting process that contains a list 
+of actions that should be applied in this case, these actions might be one the following:  
+- ALLOW - meaning that the intercepting process should get the data from the backend data service, without having 
+to change anything in the data, and sending it back to the user as is.  
+- REDACT - meaning that the intercepting process should get the data from the backend data service, however before 
+returning a response to the user, the data should be modified, and following the defined policies, the process would 
+have a list of columns (rows not yet supported) in the data (`csv` format) that should be redacted for this specific 
+role of the user (this list would be received from OPA along with the action that should be made). Once the process 
+goes over the data and modifies it accordingly, it sends a response back to the user containing the modified data.  
+- BLOCK - meaning that the intercepting process will not forward the request to the backend data service, and it 
+will respond to the user with a status of "access forbidden".  
+
+Following the example, in our case the intercepting process will receive a REDACT action from OPA with a list of 
+columns that should be redacted. Next, the process will send an HTTP request to the backend data service requesting 
+the needed data. Once the data is received, the process redacts the columns and returns a response to the user.  
 
   
 ## Environment Build
 1) Follow the steps of the QuickStart Guide in: https://fybrik.io/v0.4/get-started/quickstart/.  
 Displayed here for convenience:  
-   1) ```
+   1) ```shell
       kind create cluster --name kind-cluster
-   2) ```
+   2) ```shell
       helm repo add jetstack https://charts.jetstack.io 
       helm repo add hashicorp https://helm.releases.hashicorp.com 
       helm repo add fybrik-charts https://fybrik.github.io/charts 
       helm repo update
-   3) ```
+   3) ```shell
       helm install cert-manager jetstack/cert-manager \
       --namespace cert-manager \
       --version v1.2.0 \
       --create-namespace \
       --set installCRDs=true \
       --wait --timeout 120s
-   4) ```
+   4) ```shell
       git clone https://github.com/fybrik/fybrik.git
       cd fybrik
       helm dependency update charts/vault
@@ -56,9 +82,9 @@ Displayed here for convenience:
       --set "vault.server.dev.enabled=true" \
       --values charts/vault/env/dev/vault-single-cluster-values.yaml
       kubectl wait --for=condition=ready --all pod -n fybrik-system --timeout=120s
-   5) ```
+   5) ```shell
       helm install fybrik-crd charts/fybrik-crd -n fybrik-system --wait
-      helm install fybrik charts/fybrik --set global.tag=latest -n fybrik-system --wait
+      helm install fybrik charts/fybrik --set global.tag=master -n fybrik-system --wait
    6) Change the current directory to the previous directory:
    ```shell
    cd ..
@@ -73,56 +99,82 @@ Displayed here for convenience:
 1) Deploy the backend data server:
     ```shell
     export HELM_EXPERIMENTAL_OCI=1
-    helm chart pull ghcr.io/robshahla/backend-server-chart:v0.0.1
-    helm chart export --destination=./tmp ghcr.io/robshahla/backend-server-chart:v0.0.1
+    helm chart pull ghcr.io/fybrik/backend-server-chart:v0.0.1
+    helm chart export --destination=./tmp ghcr.io/fybrik/backend-server-chart:v0.0.1
     helm install rel1-backend-server ./tmp/backend_server
     ```
 
 2) Create the assets:
     ```shell
-    wget assets...
-    kubectl apply -f assets/
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/assets/asset_get_safety_data.yaml
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/assets/asset_start_robot.yaml
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/assets/asset_stop_robot.yaml
     ```  
-3) Create all of the secrets under the directory `fog-protect/secrets` in the 
-`forprotect` namespace (the current context of `kubectl`), and afterwards create the `jwt_key_secret.yaml` in 
-the `fybrik-blueprints` namespace:  
+
+3) Create the `jwt_key_secret.yaml` in both in the `fogprotect` and `fybrik-blueprints` namespaces:  
     ```shell
-    kubectl apply -f secrets/
-    kubectl apply -n fybrik-blueprints -f secrets/jwt_key_secret.yaml
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
+    kubectl apply -n fybrik-blueprints -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
     ```
 
 4) Create the RBAC for the fybrik manager so that the manager can list the assets and other resources:  
     ```shell
-    wget rbac...
-    kubectl apply -f fybrik-system-manager-rbac.yaml -n fybrik-system
+    kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-system-manager-rbac.yaml
     ```
 
-5) Deploy the filter pod:
+5) Deploy the fybrik module and application:
     ```shell
-    kubectl apply -f rest-read-module.yaml -n fybrik-system
-    kubectl apply -f rest-read-application.yaml
+    kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/rest-read-module.yaml
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/rest-read-application.yaml
     kubectl wait --for=condition=ready --all pod --timeout=120s
     ```
 
 6) Create a port-forwarding to the filter service:  
     ```shell
-    kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559
+    kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559 &
     ```
 
 7) Deploy the pod of the GUI:
     ```shell
-    helm chart pull ghcr.io/robshahla/factory-gui-chart:v0.0.1
-    helm chart export --destination=./tmp ghcr.io/robshahla/factory-gui-chart:v0.0.1
+    helm chart pull ghcr.io/fybrik/factory-gui-chart:v0.0.1
+    helm chart export --destination=./tmp ghcr.io/fybrik/factory-gui-chart:v0.0.1
     helm install rel1-factory-gui ./tmp/factory_gui
     kubectl wait --for=condition=ready --all pod --timeout=120s
     ```
 
 8) Create a port-forwarding to the GUI service:
     ```shell
-    kubectl port-forward svc/factory-gui 3001:3000
+    kubectl port-forward svc/factory-gui 3001:3000 &
     ```  
 
 9) Open a browser and go to: `http://127.0.0.1:3001` to use the GUI.  
+
+### Cleanup
+1. Stop the port-forwarding:
+    ```shell
+    pgrep -f "kubectl port-forward svc/factory-gui 3001:3000" | xargs kill
+    pgrep -f "kubectl -n fybrik-blueprints port-forward svc/rest-read 5559:5559" | xargs kill
+    ```
+2. Remove the `tmp` directory:
+    ```shell
+    rm -r tmp
+    ```
+3. Delete the `fogprotect` namespace:  
+    ```shell
+    kubectl delete namespace fogprotect
+    ```
+4. Delete the module:  
+    ```shell
+    kubectl -n fybrik-system delete fybrikmodule rest-read-module
+    ```
+5. Delete the RBAC authorization of the manager:  
+    ```shell
+    kubectl -n fybrik-system delete -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-system-manager-rbac.yaml
+    ```
+6. Delete the JWT secret:  
+    ```shell
+    kubectl delete -n fybrik-blueprints -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
+    ```
 
 ## Development
 1) Clone this repository:  
@@ -148,17 +200,15 @@ under the `Installation` section, brought here for convenience:
     ```shell
     kubectl apply -f fybrik-system-manager-rbac.yaml -n fybrik-system
     ```
-4) Apply all of the assets, along with the `secret` under the directory `fog-protect/assets` in the 
-`forprotect` namespace (the current context of `kubectl`):  
+4) Apply all of the assets in the `forprotect` namespace (the current context of `kubectl`):  
     ```shell
     kubectl apply -f assets/
     ```
 
-5) Create all of the secrets under the directory `fog-protect/secrets` in the 
-`forprotect` namespace (the current context of `kubectl`), and afterwards create the `jwt_key_secret.yaml` in 
-the `fybrik-blueprints` namespace:  
+5) Create the `jwt_key_secret.yaml` secret under the directory `fog-protect/secrets` in the 
+`forprotect` namespace (the current context of `kubectl`), and also in the `fybrik-blueprints` namespace:  
     ```shell
-    kubectl apply -f secrets/
+    kubectl apply -f secrets/jwt_key_secret.yaml
     kubectl apply -n fybrik-blueprints -f secrets/jwt_key_secret.yaml
     ```
     **Note:** the secret `secrets/jwt_key_secret.yaml` contains the secret key used as the authentication key for the 

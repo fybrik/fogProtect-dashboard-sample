@@ -7,7 +7,7 @@ replicaCount: 1
 image:
 
 #  repository: 192.168.56.4:31965
-  name: ghcr.io/robshahla/factory-gui:v0.0.1
+  name: ghcr.io/fybrik/factory-gui:v0.0.1
   pullPolicy: Always
   # Overrides the image tag whose default is the chart version.
   #tag: ""
