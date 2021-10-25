@@ -111,15 +111,9 @@ Displayed here for convenience:
     kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/assets/asset_stop_robot.yaml
     ```  
 
-3) Create the `jwt_key_secret.yaml` in both in the `fogprotect` and `fybrik-blueprints` namespaces:  
+3) Set up the jwt authentication secret with an associated service account and ClusterRole definition for secret readers
     ```shell
-    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
-    kubectl apply -n fybrik-blueprints -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
-    ```
-
-4) Create the RBAC for the fybrik manager so that the manager can list the assets and other resources:  
-    ```shell
-    kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-system-manager-rbac.yaml
+    kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-jwt-secret-reader.yaml
     ```
 
 5) Deploy the fybrik module and application:
@@ -167,13 +161,9 @@ Displayed here for convenience:
     ```shell
     kubectl -n fybrik-system delete fybrikmodule rest-read-module
     ```
-5. Delete the RBAC authorization of the manager:  
+5. Delete the JWT secrets and service account:  
     ```shell
-    kubectl -n fybrik-system delete -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-system-manager-rbac.yaml
-    ```
-6. Delete the JWT secret:  
-    ```shell
-    kubectl delete -n fybrik-blueprints -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
+    kubectl delete -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-jwt-secret-reader.yaml
     ```
 
 ## Development
