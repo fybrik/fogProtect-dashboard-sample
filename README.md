@@ -74,8 +74,6 @@ Displayed here for convenience:
       --set installCRDs=true \
       --wait --timeout 120s
    4) ```shell
-      git clone https://github.com/fybrik/fybrik.git
-      cd fybrik
       helm dependency update charts/vault
       helm install vault charts/vault --create-namespace -n fybrik-system \
       --set "vault.injector.enabled=false" \
@@ -83,11 +81,8 @@ Displayed here for convenience:
       --values charts/vault/env/dev/vault-single-cluster-values.yaml
       kubectl wait --for=condition=ready --all pod -n fybrik-system --timeout=120s
    5) ```shell
-      helm install fybrik-crd charts/fybrik-crd -n fybrik-system --wait
-      helm install fybrik charts/fybrik --set global.tag=master -n fybrik-system --wait
-   6) Change the current directory to the previous directory:
-   ```shell
-   cd ..
+      helm install fybrik-crd fybrik-charts/fybrik-crd -n fybrik-system --wait
+      helm install fybrik fybrik-charts/fybrik --set global.tag=master -n fybrik-system --wait
    ```
 2) Create a namespace that will contain the application and the backend data server:  
     ```shell
