@@ -83,8 +83,8 @@ Displayed here for convenience:
       --values charts/vault/env/dev/vault-single-cluster-values.yaml
       kubectl wait --for=condition=ready --all pod -n fybrik-system --timeout=120s
    5) ```shell
-      helm install fybrik-crd charts/fybrik-crd -n fybrik-system --wait
-      helm install fybrik charts/fybrik --set global.tag=master -n fybrik-system --wait
+      helm install fybrik-crd fybrik-charts/fybrik-crd -n fybrik-system --wait
+      helm install fybrik fybrik-charts/fybrik --set global.tag=master -n fybrik-system --wait
    6) Change the current directory to the previous directory:
    ```shell
    cd ..
