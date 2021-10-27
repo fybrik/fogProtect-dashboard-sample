@@ -82,7 +82,7 @@ Displayed here for convenience:
       kubectl wait --for=condition=ready --all pod -n fybrik-system --timeout=120s
    5) ```shell
       helm install fybrik-crd fybrik-charts/fybrik-crd -n fybrik-system --wait
-      helm install fybrik fybrik-charts/fybrik --set global.tag=master -n fybrik-system --wait
+      helm install fybrik fybrik-charts/fybrik  -n fybrik-system --wait
    ```
 2) Create a namespace that will contain the application and the backend data server:  
     ```shell
@@ -93,6 +93,7 @@ Displayed here for convenience:
 ## Deployment
 1) Deploy the backend data server:
     ```shell
+    mkdir tmp
     export HELM_EXPERIMENTAL_OCI=1
     helm chart pull ghcr.io/fybrik/backend-server-chart:v0.0.1
     helm chart export --destination=./tmp ghcr.io/fybrik/backend-server-chart:v0.0.1
