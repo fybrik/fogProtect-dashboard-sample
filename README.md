@@ -182,27 +182,21 @@ under the `Installation` section, brought here for convenience:
       ```
     **Improtant: make sure that the repositories where the docker image and the helm chart were pushed 
        are public**  
-3) Apply the RBAC for the fybrik manager:  
+3) Apply the ClusterRole and jwt secret:  
     ```shell
-    kubectl apply -f fybrik-system-manager-rbac.yaml -n fybrik-system
+    kubectl apply -f fybrik-jwt-secret-reader.yaml -n fybrik-system
     ```
 4) Apply all of the assets in the `forprotect` namespace (the current context of `kubectl`):  
     ```shell
     kubectl apply -f assets/
     ```
 
-5) Create the `jwt_key_secret.yaml` secret under the directory `fog-protect/secrets` in the 
-`forprotect` namespace (the current context of `kubectl`), and also in the `fybrik-blueprints` namespace:  
-    ```shell
-    kubectl apply -f secrets/jwt_key_secret.yaml
-    kubectl apply -n fybrik-blueprints -f secrets/jwt_key_secret.yaml
-    ```
-    **Note:** the secret `secrets/jwt_key_secret.yaml` contains the secret key used as the authentication key for the 
-    JWT used between the rest filter and the frontend GUI, in order to change the key, you can invoke:  
+5)    **The secret in 'fybrik-jwt-secret-reader.yaml` contains the secret key used as the authentication key for the 
+    JWT used by both the REST module and the frontend GUI. In order to change the key, you can invoke:  
    - ```shell
      echo -n '<your_key>' | base64
      ```
-     Once you get the base64 encoding of your key, modify the value of `data.jwt_key` in `jwt_key_secret.yaml`. 
+     Once you get the base64 encoding of your key, modify the value of `data.jwt_key` in `fybrik-jwt-secret-reader.yaml`. 
      In order for the change to take effect, the GUI and the rest-read pods need to be restarted.  
 
 6) Apply the module in the `fybrik-system` namespace:  
@@ -247,7 +241,7 @@ following:
       ```  
 
 Another option instead of pushing the images to a public image registry is to build them locally and load them into the local
-cluster, to do that first change the value of the variable `image.name` to `<image_name>:<tag>` in the relevant 
+cluster. To do that, first change the value of the variable `image.name` to `<image_name>:<tag>` in the relevant 
 `values.yaml` file related to the helm chart being deployed, and then invoke the following:
 ```shell
 docker build -t <image_name>:<tag> .
