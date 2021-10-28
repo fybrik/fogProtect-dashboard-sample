@@ -83,6 +83,9 @@ Displayed here for convenience:
    5) ```shell
       helm install fybrik-crd fybrik-charts/fybrik-crd -n fybrik-system --wait
       helm install fybrik fybrik-charts/fybrik  -n fybrik-system --wait
+   6) Change the current directory to the previous directory:
+   ```shell
+   cd ..
    ```
 2) Create a namespace that will contain the application and the backend data server:  
     ```shell
