@@ -2,6 +2,7 @@ apiVersion: app.fybrik.io/v1alpha1
 kind: FybrikApplication
 metadata:
   name: rest-read
+  namespace: fogprotect
 spec:
   selector:
    workloadSelector:
@@ -13,16 +14,6 @@ spec:
     role: Data Owner
   data:
     - dataSetID: "fogprotect/api.control.start-robot"
-      requirements:
-        interface:
-          protocol: s3
-          dataformat: csv
-    - dataSetID: "fogprotect/api.control.stop-robot"
-      requirements:
-        interface:
-          protocol: s3
-          dataformat: csv
-    - dataSetID: "fogprotect/api.personnel-data.get-safety-data"
       requirements:
         interface:
           protocol: s3

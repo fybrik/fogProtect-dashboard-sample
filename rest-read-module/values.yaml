@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
 #  repository: 192.168.56.4:31965
-  name: ghcr.io/fybrik/rest-read-module:v0.0.1
+  name: ghcr.io/elsalant/rest-read-module:v0.0.1
   pullPolicy: Always
   # Overrides the image tag whose default is the chart version.
   #tag: ""
@@ -21,12 +21,12 @@ fullnameOverride: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
-  create: true
+  create: false
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: "opa-connector"
+  name: "jwt-reader"
 
 podAnnotations: {}
 

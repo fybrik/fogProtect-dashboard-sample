@@ -74,8 +74,6 @@ Displayed here for convenience:
       --set installCRDs=true \
       --wait --timeout 120s
    4) ```shell
-      git clone https://github.com/fybrik/fybrik.git
-      cd fybrik
       helm dependency update charts/vault
       helm install vault charts/vault --create-namespace -n fybrik-system \
       --set "vault.injector.enabled=false" \
@@ -84,7 +82,7 @@ Displayed here for convenience:
       kubectl wait --for=condition=ready --all pod -n fybrik-system --timeout=120s
    5) ```shell
       helm install fybrik-crd fybrik-charts/fybrik-crd -n fybrik-system --wait
-      helm install fybrik fybrik-charts/fybrik --set global.tag=master -n fybrik-system --wait
+      helm install fybrik fybrik-charts/fybrik  -n fybrik-system --wait
    6) Change the current directory to the previous directory:
    ```shell
    cd ..
@@ -98,6 +96,7 @@ Displayed here for convenience:
 ## Deployment
 1) Deploy the backend data server:
     ```shell
+    mkdir tmp
     export HELM_EXPERIMENTAL_OCI=1
     helm chart pull ghcr.io/fybrik/backend-server-chart:v0.0.1
     helm chart export --destination=./tmp ghcr.io/fybrik/backend-server-chart:v0.0.1
@@ -111,15 +110,9 @@ Displayed here for convenience:
     kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/assets/asset_stop_robot.yaml
     ```  
 
-3) Create the `jwt_key_secret.yaml` in both in the `fogprotect` and `fybrik-blueprints` namespaces:  
+3) Set up the jwt authentication secret with an associated service account and ClusterRole definition for secret readers
     ```shell
-    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
-    kubectl apply -n fybrik-blueprints -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
-    ```
-
-4) Create the RBAC for the fybrik manager so that the manager can list the assets and other resources:  
-    ```shell
-    kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-system-manager-rbac.yaml
+    kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-jwt-secret-reader.yaml
     ```
 
 5) Deploy the fybrik module and application:
@@ -167,13 +160,9 @@ Displayed here for convenience:
     ```shell
     kubectl -n fybrik-system delete fybrikmodule rest-read-module
     ```
-5. Delete the RBAC authorization of the manager:  
+5. Delete the JWT secrets and service account:  
     ```shell
-    kubectl -n fybrik-system delete -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-system-manager-rbac.yaml
-    ```
-6. Delete the JWT secret:  
-    ```shell
-    kubectl delete -n fybrik-blueprints -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/secrets/jwt_key_secret.yaml
+    kubectl delete -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-jwt-secret-reader.yaml
     ```
 
 ## Development
@@ -196,27 +185,21 @@ under the `Installation` section, brought here for convenience:
       ```
     **Improtant: make sure that the repositories where the docker image and the helm chart were pushed 
        are public**  
-3) Apply the RBAC for the fybrik manager:  
+3) Apply the ClusterRole and jwt secret:  
     ```shell
-    kubectl apply -f fybrik-system-manager-rbac.yaml -n fybrik-system
+    kubectl apply -f fybrik-jwt-secret-reader.yaml -n fybrik-system
     ```
 4) Apply all of the assets in the `forprotect` namespace (the current context of `kubectl`):  
     ```shell
     kubectl apply -f assets/
     ```
 
-5) Create the `jwt_key_secret.yaml` secret under the directory `fog-protect/secrets` in the 
-`forprotect` namespace (the current context of `kubectl`), and also in the `fybrik-blueprints` namespace:  
-    ```shell
-    kubectl apply -f secrets/jwt_key_secret.yaml
-    kubectl apply -n fybrik-blueprints -f secrets/jwt_key_secret.yaml
-    ```
-    **Note:** the secret `secrets/jwt_key_secret.yaml` contains the secret key used as the authentication key for the 
-    JWT used between the rest filter and the frontend GUI, in order to change the key, you can invoke:  
+5)    **The secret in 'fybrik-jwt-secret-reader.yaml` contains the secret key used as the authentication key for the 
+    JWT used by both the REST module and the frontend GUI. In order to change the key, you can invoke:  
    - ```shell
      echo -n '<your_key>' | base64
      ```
-     Once you get the base64 encoding of your key, modify the value of `data.jwt_key` in `jwt_key_secret.yaml`. 
+     Once you get the base64 encoding of your key, modify the value of `data.jwt_key` in `fybrik-jwt-secret-reader.yaml`. 
      In order for the change to take effect, the GUI and the rest-read pods need to be restarted.  
 
 6) Apply the module in the `fybrik-system` namespace:  
@@ -261,7 +244,7 @@ following:
       ```  
 
 Another option instead of pushing the images to a public image registry is to build them locally and load them into the local
-cluster, to do that first change the value of the variable `image.name` to `<image_name>:<tag>` in the relevant 
+cluster. To do that, first change the value of the variable `image.name` to `<image_name>:<tag>` in the relevant 
 `values.yaml` file related to the helm chart being deployed, and then invoke the following:
 ```shell
 docker build -t <image_name>:<tag> .
