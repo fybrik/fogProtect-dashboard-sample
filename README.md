@@ -112,7 +112,7 @@ Displayed here for convenience:
 
 3) Set up the jwt authentication secret with an associated service account and ClusterRole definition for secret readers
     ```shell
-    kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-jwt-secret-reader.yaml
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-jwt-secret-reader.yaml
     ```
 
 5) Deploy the fybrik module and application:
