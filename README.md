@@ -57,7 +57,7 @@ the needed data. Once the data is received, the process redacts the columns and 
 
   
 ## Environment Build
-1) Follow the steps of the QuickStart Guide in: https://fybrik.io/v0.4/get-started/quickstart/.  
+1) Follow the steps of the QuickStart Guide in: https://fybrik.io/v0.5/get-started/quickstart/.  
 Displayed here for convenience:  
    1) ```shell
       kind create cluster --name kind-cluster
@@ -114,7 +114,10 @@ Displayed here for convenience:
     ```shell
     kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-jwt-secret-reader.yaml
     ```
-
+4) Apply the global policy
+    ```shell
+    ./applyPolicy.sh
+    
 5) Deploy the fybrik module and application:
     ```shell
     kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/rest-read-module.yaml
