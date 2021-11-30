@@ -265,6 +265,6 @@ docker build -t backend_server:v1 .
 kind load docker-image backend_server:v1 --name kind-cluster
 helm package helm/
 helm install backend-service backend_server-0.1.0.tgz
-```
+``` 
 
 11) Open a browser and go to: `http://127.0.0.1:3001` to use the GUI.  
