@@ -60,7 +60,7 @@ jobs:
     # - run: docker images
     - name: Helm login
     # if: ${{ github.event_name != 'pull_request' }}
-      run: export HELM_EXPERIMENTAL_OCI=1 && echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login -u "${{ github.actor }}" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
+      run: export HELM_EXPERIMENTAL_OCI=1 && echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login -u "fybrik" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
     - name: Helm chart push
       # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
       run: export HELM_REPOSITORY=ghcr.io/fybrik/rest-read-module-chart && make helm-push
