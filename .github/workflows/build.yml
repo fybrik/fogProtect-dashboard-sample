@@ -3,11 +3,13 @@ name: Build
 on:
   push:
     branches:
+      - main
       - workflow
     tags:
       - '*'
   pull_request:
     branches:
+      - main
       - workflow
       
 
