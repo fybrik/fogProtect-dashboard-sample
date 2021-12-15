@@ -50,9 +50,9 @@ jobs:
     - name: Docker login
       # if: ${{ github.event_name != 'pull_request' }}
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u "fybrik" --password-stdin "${{ env.DOCKER_HOSTNAME }}"
-    #- name: Docker push
+    - name: Docker push
       # if: ${{ (github.event_name != 'pull_request') && !contains(github.ref, 'tags') }}
-    #  run: make docker-push
+      run: make docker-push
     
     # - id: version
     #   name: Infer version
