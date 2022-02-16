@@ -1,3 +1,7 @@
+# Copyright 2020 IBM Corp.
+# SPDX-License-Identifier: Apache-2.0
+
+---
 apiVersion: app.fybrik.io/v1alpha1
 kind: FybrikModule
 metadata:
@@ -7,22 +11,27 @@ metadata:
     version: 0.0.1  # semantic version
   namespace: fybrik-system
 spec:
-  flows:
-  - read
-  chart:
-    name: ghcr.io/elsalant/rest-read-module-chart:v0.0.1
+  type: service
   capabilities:
-    api:
-      endpoint:
-        port: 5559
-        scheme: rest
-      protocol: s3
-      dataformat: csv
-    supportedInterfaces:
-    - flow: read
-      source:
-        protocol: s3
-        dataformat: csv
-    actions:
-    - id: redact-ID
-      level: 2  # column
+    - capability: read
+      actions:
+        - name: Policies
+      api:
+        connection:
+          name: rest-read
+          rest-read:
+            port: 5559
+        dataFormat: json
+      supportedInterfaces:
+        - source:
+            protocol: rest
+            dataformat: json
+  chart:
+    name: ghcr.io/fybrik/rest_dashboard_chart:0.1.0
+    values:
+      image.tag: 0.0.2
+  statusIndicators:
+    - kind: StreamTransfer
+      successCondition: status.status == SUCCEEDED
+      failureCondition: status.status == FAILED
+      errorMessage: status.error

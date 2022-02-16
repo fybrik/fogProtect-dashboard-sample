@@ -2,27 +2,23 @@ apiVersion: katalog.fybrik.io/v1alpha1
 kind: Asset
 metadata:
   name: api.data.get-occupancy
+  namespace: fogprotect
 spec:
   secretRef:
     name: ""
-  assetDetails:
+  details:
     dataFormat: csv
     connection:
-      type: s3
-      s3:
+      name: rest
+      rest:
         endpoint: "http://127.0.0.1:5559/api/data/get_occupancy"
-        bucket: demo
-        objectKey: "hello"
-  assetMetadata:
+  metadata:
     tags:
-    - data
-    componentsMetadata:
-      occupancy:
+      occupancy_related: true   
+    columns:
+      - name: Age
         tags:
-        - occupancy_related
-      Age:
+          PII: true
+      - name: Lname
         tags:
-        - PII
-      Lname:
-        tags:
-        - sensitive
+          sensitive: true

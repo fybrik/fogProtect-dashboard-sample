@@ -1,6 +1,7 @@
+
 apiVersion: v2
 appVersion: 1.1.0
-description: A Helm chart for Kubernetes
-name: filteridchart_opa
+description: Helm chart for runtime role evaluation against a REST server
+name: rest_dashboard_chart
 type: application
 version: 0.1.0

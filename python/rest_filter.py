@@ -37,7 +37,6 @@ def get_info_jwt(encrypted_payload):
 
     return role, organization
 
-
 # Catch anything
 @app.route('/<path:query_string>', methods=['GET', 'POST', 'PUT'])
 @cross_origin()
@@ -73,7 +72,12 @@ def get_all(query_string=None):
     logger.info("sending query the the backend data service")
 
     logger.info(f"query gateway URL: {get_backend_url()}, request.method: {request.method}")
-    data, return_headers = send_query_backend(query_string, request.headers, request.method, request.form, request.args)
+
+    if request.form:
+        data, return_headers = send_query_backend(query_string, request.headers, request.method, request.form, request.args)
+    else:
+        data, return_headers = send_query_backend(query_string, request.headers, request.method, request.data, request.args)
+
     if data is None:
         logger.warning("no results returned from the backend data service")
         return "No results returned", ResponseCode.VALID_RETURN

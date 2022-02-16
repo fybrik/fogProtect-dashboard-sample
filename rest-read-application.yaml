@@ -3,6 +3,8 @@ kind: FybrikApplication
 metadata:
   name: rest-read
   namespace: fogprotect
+  labels: 
+    app: dashboard-read
 spec:
   selector:
    workloadSelector:
@@ -16,5 +18,5 @@ spec:
     - dataSetID: "fogprotect/api.control.start-robot"
       requirements:
         interface:
-          protocol: s3
-          dataformat: csv
+          protocol: rest-read
+          dataformat: json

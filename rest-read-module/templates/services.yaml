@@ -42,12 +42,10 @@ spec:
       serviceAccountName: {{ .Values.serviceAccount.name }}
       securityContext:
         {{- toYaml .Values.opaSidecar.podSecurityContext | nindent 8 }}
-{{- if .Values.persistence.enabled }}
       volumes:
-        - name: {{ .Values.app.name }}-pv-storage
-          persistentVolumeClaim:
-            claimName: {{ .Values.app.name }}-pv-claim
-{{- end }}
+        - name: config
+          configMap:
+            name: policy-cm
       containers:
       - name: {{ .Values.app.name }}
         securityContext:
@@ -57,11 +55,10 @@ spec:
         ports:
         - name: https 
           containerPort: {{ .Values.app.port }} 
-{{- if .Values.persistence.enabled }}
         volumeMounts:
-          - mountPath: {{ .Values.persistence.mountpath | quote }}
-            name: {{ .Values.app.name }}-pv-storage
-{{- end }}
+          - readOnly: true
+            mountPath: /etc/conf
+            name: config
         envFrom:
         - configMapRef:
             name: {{ .Values.configmap.name }}

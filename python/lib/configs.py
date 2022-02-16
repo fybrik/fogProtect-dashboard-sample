@@ -54,9 +54,8 @@ class OPAConfig:
     # the namespace in the cluster in which the assets reside.
     asset_namespace = 'default'
 
-    # TODO: change this to the actual path of the configmap (mounted in the container)
-    # the path for the configmap file created by the fybrik-manager whenever a new policy is applied
-    configmap_path = 'fogprotect-policy.yaml'
+    # the path for the configmap file created by the fybrik-manager
+    configmap_path = '/etc/conf/conf.yaml'
 
 
 class FilterAction:
