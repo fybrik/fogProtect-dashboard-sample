@@ -85,14 +85,9 @@ def configmap_to_policy():
 
     with open(OPAConfig.configmap_path, 'r') as stream:
         configmap_return = yaml.safe_load(stream)
-
- #   configmap_data = configmap_return.get('data', [])
- #   policy = configmap_data['policy']
     policy = configmap_return['data']
     # Reconstruct the rule(s) in Rego
- #   action_list = json.loads(policy)
     rego_rules = _build_rego_rules(policy)
- #   rego_rules = _build_rego_rules(action_list)
 
     policy_headers = get_policy_headers()
     policy_boilerplate = get_configmap_policy_boilerplate()
