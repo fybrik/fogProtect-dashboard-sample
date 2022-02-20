@@ -1,7 +1,12 @@
 # FogProtect Usecase
 This is an application that demonstrates the use of [fybrik](https://github.com/fybrik/fybrik) and 
 leverages it to control the data flow between a webserver and a data server, where the webserver 
-sends HTTP requests to data server and the data server responds accordingly.  
+sends HTTP requests to a REST-base data server and the data server responds accordingly.  
+
+This application demonstrates how runtime policy evaluation can be handled by Fybrik by having the 
+Fybrik module communication with a local version of OPA (loaded as a sidecar).  User authentication guaranteed
+by a JWT (JASON Web Token) which accompanies each REST request for data.  This allows for the user (role) to be 
+dynamically changed between data access results.
 
 ## Architecture
 The project contains 3 main components:  
@@ -57,7 +62,7 @@ the needed data. Once the data is received, the process redacts the columns and 
 
   
 ## Environment Build
-1) Follow the steps of the QuickStart Guide in: https://fybrik.io/v0.4/get-started/quickstart/.  
+1) Follow the steps of the QuickStart Guide in: https://fybrik.io/v0.6/get-started/quickstart/.  
 Displayed here for convenience:  
    1) ```shell
       kind create cluster --name kind-cluster
@@ -89,15 +94,14 @@ Displayed here for convenience:
     kubectl create namespace fogprotect
     kubectl config set-context --current --namespace=fogprotect
     ```
+3) Clone the repo
+   git clone https://github.com/fybrik/fogProtect-dashboard-sample.git 
 
 ## Deployment
 1) Deploy the backend data server:
     ```shell
-    mkdir tmp
     export HELM_EXPERIMENTAL_OCI=1
-    helm chart pull ghcr.io/fybrik/backend-server-chart:v0.0.1
-    helm chart export --destination=./tmp ghcr.io/fybrik/backend-server-chart:v0.0.1
-    helm install rel1-backend-server ./tmp/backend_server
+    helm install rel1-backend-server  oci://ghcr.io/fybrik/backend-server-chart --version=v0.0.1
     ```
 
 2) Create the assets:
@@ -109,7 +113,12 @@ Displayed here for convenience:
 
 3) Set up the jwt authentication secret with an associated service account and ClusterRole definition for secret readers
     ```shell
-    kubectl apply -n fybrik-system -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-jwt-secret-reader.yaml
+    kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-jwt-secret-reader.yaml
+    ```
+4) Apply the policy
+    ```
+      shell
+     ./applyPolicy.sh
     ```
 
 5) Deploy the fybrik module and application:
