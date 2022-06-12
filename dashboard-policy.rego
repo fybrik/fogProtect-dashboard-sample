@@ -56,4 +56,3 @@ rule[{"action": {"name": "Policies", "columns": "NA", "copyrules" : `[{"action":
     ]`}, "policy" : "runtime"}] {
 1 == 1
 }
-
