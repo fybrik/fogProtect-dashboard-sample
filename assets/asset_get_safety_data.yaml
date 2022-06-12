@@ -2,45 +2,45 @@ apiVersion: katalog.fybrik.io/v1alpha1
 kind: Asset
 metadata:
   name: api.personnel-data.get-safety-data
+  namespace: fogprotect
 spec:
+  details: 
+    dataFormat: json
+    connection:
+      name: rest
+      rest:
+        endpoint: "http://127.0.0.1:5559/api/personnel_data/get_safety_data"
   secretRef:
     name: ""
-  assetDetails:
-    dataFormat: csv
-    connection:
-      type: s3
-      s3:
-        endpoint: "http://127.0.0.1:5559/api/personnel_data/get_safety_data"
-        bucket: demo
-        objectKey: "hello"
-  assetMetadata:
+  metadata:
+    name: REST server
     tags:
-    - personnel
-    componentsMetadata:
-      production_sector.with_helmet:
+      personnel: true
+    columns:
+      - name: production_sector.with_helmet
         tags:
-        - PII
-      production_sector.without_helmet:
+          PII: true
+      - name: production_sector.without_helmet
         tags:
-          - PII
-      production_sector.total:
+          PII: true
+      - name: production_sector.total
         tags:
-          - sensitive
-      non_production_sector.with_helmet:
+          sensitive: true
+      - name: non_production_sector.with_helmet
         tags:
-        - PII
-      non_production_sector.without_helmet:
+          PII: true
+      - name: non_production_sector.without_helmet
         tags:
-          - PII
-      non_production_sector.total:
+          PII: true
+      - name: non_production_sector.total
         tags:
-          - sensitive
-      full_area.with_helmet:
+          PII: sensitive
+      - name: full_area.with_helmet
         tags:
-          - PII
-      full_area.without_helmet:
+          PII: true
+      - name: full_area.without_helmet
         tags:
-          - PII
-      full_area.total:
+          PII: true
+      - name: full_area.total
         tags:
-          - sensitive
+          sensitive: true

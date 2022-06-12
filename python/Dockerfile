@@ -2,9 +2,8 @@ FROM python:3.8-slim
 
 WORKDIR /app
 COPY rest_filter.py rest_filter.py
-COPY lib /app/lib
-COPY requirements.txt requirements.txt
-COPY fogprotect-policy.yaml fogprotect-policy.yaml
+COPY lib lib
+COPY ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install -r requirements.txt
 RUN ["apt-get", "update"]

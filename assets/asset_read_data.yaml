@@ -2,27 +2,27 @@ apiVersion: katalog.fybrik.io/v1alpha1
 kind: Asset
 metadata:
   name: api.data.read-data
+  namespace: fogprotect
 spec:
+  details:
+    dataFormat: json
+    connection:
+      name: rest
+      rest:
+        endpoint: "http://127.0.0.1:5559/api/data/read_data"
   secretRef:
     name: ""
-  assetDetails:
-    dataFormat: csv
-    connection:
-      type: s3
-      s3:
-        endpoint: "http://127.0.0.1:5559/api/data/read_data"
-        bucket: demo
-        objectKey: "hello"
-  assetMetadata:
-    tags:
-    - data
-    componentsMetadata:
-      sensors:
+  metadata:
+    name: REST server
+    tags: 
+      data: true
+    columns:
+      - name: sensors
         tags:
-        - PII
-      Age:
+          PII: true
+      - name: Age
         tags:
-        - PII
-      Lname:
+          PII: true
+      - name: Lname
         tags:
-        - sensitive
+          sensitive: true

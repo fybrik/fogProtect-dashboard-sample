@@ -1,4 +1,3 @@
-# Default values for protegochart.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -6,7 +5,7 @@ replicaCount: 1
 
 image:
 #  repository: 192.168.56.4:31965
-  name: ghcr.io/elsalant/rest-read-module:v0.0.1
+  name: ghcr.io/fybrik/rest-read-module:0.0.2
   pullPolicy: Always
   # Overrides the image tag whose default is the chart version.
   #tag: ""
@@ -157,3 +156,30 @@ opaSidecar:
   service:
     type: ClusterIP
     port: 8181
+
+# Testing only - values not used by Fybrik control plane
+read:
+- assetID: "test1"
+  source:
+    connection:
+      name: fhir
+      fhir:
+        namespace: fybrik-system
+        secret_file: fhir-credentials
+        object_key:
+      type: 2
+    credentialLocation: 
+    format: json  
+  transformations:
+  - name: "RemoveColumn"
+    RemoveColumn:
+      columns:
+        - col1
+  - name: "RedactColumn"
+    RedactColumn:
+      columns:
+        - col1
+  - name: "BlockURL"
+    BlockURL:
+  - name: "Allow"
+    Allow:

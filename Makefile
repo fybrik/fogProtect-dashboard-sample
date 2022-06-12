@@ -1,42 +1,23 @@
 export DOCKER_USERNAME ?= fybrik
-export DOCKER_PASSWORD ?=
+export DOCKER_PASSWORD ?= 
 export DOCKER_HOSTNAME ?= ghcr.io
 export DOCKER_NAMESPACE ?= fybrik
-export DOCKER_TAGNAME ?= v0.0.1
+export DOCKER_TAGNAME ?= 0.0.2
 
 DOCKER_IMG_NAME ?= rest-read-module
-DOCKER_CHART_IMG_NAME ?= rest-read-module-chart
 DOCKER_FILE ?= ./python/Dockerfile
-DOCKER_IMG_CONTEXT ?= ./python
-CHART_PATH ?= ./rest-read-module
+APP_IMG ?=  ${DOCKER_HOSTNAME}/${DOCKER_NAMESPACE}/${DOCKER_IMG_NAME}:${DOCKER_TAGNAME}
+DOCKER_IMG_CONTEXT ?= .
 
-APP_IMG ?= ${DOCKER_HOSTNAME}/${DOCKER_NAMESPACE}/${DOCKER_IMG_NAME}:${DOCKER_TAGNAME}
-CHART_IMG ?= ${DOCKER_HOSTNAME}/${DOCKER_NAMESPACE}/${DOCKER_CHART_IMG_NAME}:${DOCKER_TAGNAME}
+CHART_NAME ?= ${DOCKER_IMG_NAME}
+HELM_CHART_NAME ?= rest_dashboard_chart
+CHART_REGISTRY_PATH := oci://${DOCKER_HOSTNAME}/${DOCKER_NAMESPACE}
 
-.PHONY: docker-all
-docker-all: docker-build docker-push
-
-.PHONY: docker-build
-docker-build:
-	docker build $(DOCKER_IMG_CONTEXT) -t ${APP_IMG} -f $(DOCKER_FILE) --no-cache
-
-.PHONY: docker-push
-docker-push:
-ifneq (${DOCKER_PASSWORD},)
-	@docker login \
-		--username ${DOCKER_USERNAME} \
-		--password ${DOCKER_PASSWORD} ${DOCKER_HOSTNAME}
-endif
-	docker push ${APP_IMG}
-
-.PHONY: docker-rmi
-docker-rmi:
-	docker rmi ${APP_IMG} || true
-
-HELM_VALUES ?=
-
-CHART := ${CHART_PATH}
 HELM_RELEASE ?= rel1-${DOCKER_IMG_NAME}
+HELM_TAG ?= 0.1.0
+HELM_VALUES ?= \
+	--set hello=world1
+
 TEMP := /tmp
 
 export HELM_EXPERIMENTAL_OCI=1
@@ -50,8 +31,8 @@ endif
 
 .PHONY: helm-verify
 helm-verify:
-	helm lint ${CHART}
-	helm install ${HELM_RELEASE} ${CHART} ${HELM_VALUES}
+	helm lint ${CHART_NAME}
+	helm install --dry-run ${HELM_RELEASE} ${CHART_NAME} ${HELM_VALUES}
 
 .PHONY: helm-uninstall
 helm-uninstall:
@@ -59,48 +40,41 @@ helm-uninstall:
 
 .PHONY: helm-install
 helm-install:
-	helm install ${HELM_RELEASE} ${CHART} ${HELM_VALUES}
+	helm install ${HELM_RELEASE} ${CHART_NAME} ${HELM_VALUES}
 
-.PHONY: helm-chart-push
-helm-chart-push: helm-login
-	helm chart save ${CHART} ${CHART_IMG}
-	helm chart list ${CHART_IMG}
-	helm chart push ${CHART_IMG}
-	helm chart remove ${CHART_IMG}
-	helm uninstall ${HELM_RELEASE} || true
+.PHONY: helm-package
+helm-package:
+	helm package ${CHART_NAME} --destination=${TEMP}
 
 .PHONY: helm-push
-helm-push:
-	helm chart save ${CHART} ${CHART_IMG}
-	helm chart push ${CHART_IMG}
-	helm chart remove ${CHART_IMG}
+helm-push: helm-login
+	helm push ${TEMP}/${HELM_CHART_NAME}-${HELM_TAG}.tgz ${CHART_REGISTRY_PATH}
+	rm -rf ${TEMP}/${HELM_CHART_NAME}-${HELM_TAG}.tgz
 
 .PHONY: helm-chart-pull
 helm-chart-pull: helm-login
-	helm chart pull ${CHART_IMG}
-	helm chart list
+	helm pull ${CHART_REGISTRY_PATH}/${CHART_NAME} --version ${HELM_TAG}
 
 .PHONY: helm-chart-list
 helm-chart-list:
-	helm chart list
+	helm list
 
 .PHONY: helm-chart-install
 helm-chart-install:
-	helm chart export --destination=${TEMP} ${CHART_IMG}
-	helm install ${HELM_RELEASE} ${TEMP}/${CHART} ${HELM_VALUES}
+	helm install ${HELM_RELEASE} ${CHART_REGISTRY_PATH}/${CHART_NAME} --version ${HELM_TAG} ${HELM_VALUES}
 	helm list
 
 .PHONY: helm-template
 helm-template:
-	helm template ${HELM_RELEASE} ${CHART} ${HELM_VALUES}
+	helm template ${HELM_RELEASE} ${CHART_REGISTRY_PATH} --version ${HELM_TAG} ${HELM_VALUES}
 
 .PHONY: helm-debug
 helm-debug: helm
-	helm template ${HELM_RELEASE} ${CHART} ${HELM_VALUES} --debug
+	helm template ${HELM_RELEASE} ${CHART_REGISTRY_PATH} ${HELM_VALUES} --version ${HELM_TAG} --debug
 
 .PHONY: helm-actions
 helm-actions:
-	helm show values ${CHART} | yq -y -r .actions
+	helm show values --version ${HELM_TAG} ${CHART_NAME} | yq -y -r .actions
 
 .PHONY: helm-all
 helm-all: helm-verify helm-chart-push helm-chart-pull helm-uninstall helm-chart-install

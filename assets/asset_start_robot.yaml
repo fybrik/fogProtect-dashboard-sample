@@ -2,27 +2,27 @@ apiVersion: katalog.fybrik.io/v1alpha1
 kind: Asset
 metadata:
   name: api.control.start-robot
+  namespace: fogprotect
 spec:
   secretRef:
-    name: start-robot
-  assetDetails:
-    dataFormat: csv
+    name: ""
+  details:
+    dataFormat: json
     connection:
-      type: s3
-      s3:
+      name: rest
+      rest:
         endpoint: "http://127.0.0.1:5559/api/control/start_robot"
-        bucket: demo
-        objectKey: "hello"
-  assetMetadata:
+  metadata:
+    name: robot
     tags:
-    - control
-    componentsMetadata:
-      id:
+      control: true
+    columns:
+      - name: id
         tags:
-        - PII
-      Age:
+          PII: true
+      - name: Age
         tags:
-        - PII
-      Lname:
+          PII: true
+      - name: Lname
         tags:
-        - sensitive
+          sensitive: true
