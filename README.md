@@ -63,6 +63,7 @@ the needed data. Once the data is received, the process redacts the columns and 
   
 ## Environment Build
 1) Follow the steps of the QuickStart Guide in: https://fybrik.io/v0.6/get-started/quickstart/.  
+
 Displayed here for convenience:  
    1) ```shell
       kind create cluster --name kind-cluster
@@ -88,6 +89,9 @@ Displayed here for convenience:
    5) ```shell
       helm install fybrik-crd fybrik-charts/fybrik-crd -n fybrik-system --wait
       helm install fybrik fybrik-charts/fybrik  -n fybrik-system --wait
+   6) Change the current directory to the previous directory:
+   ```shell
+   cd ..
    ```
 2) Create a namespace that will contain the application and the backend data server:  
     ```shell
@@ -115,11 +119,11 @@ Displayed here for convenience:
     ```shell
     kubectl apply -f https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/fybrik-jwt-secret-reader.yaml
     ```
-4) Apply the policy
-    ```
-      shell
-     ./applyPolicy.sh
-    ```
+4) Apply the global policy
+5) ```shell
+   kubectl -n fybrik-system create configmap dashboard-policy --from-file=https://raw.githubusercontent.com/fybrik/fogProtect-dashboard-sample/main/dashboard-policy.rego
+   kubectl -n fybrik-system label configmap dashboard-policy openpolicyagent.org/policy=rego
+   ```
 
 5) Deploy the fybrik module and application:
     ```shell
@@ -266,6 +270,6 @@ docker build -t backend_server:v1 .
 kind load docker-image backend_server:v1 --name kind-cluster
 helm package helm/
 helm install backend-service backend_server-0.1.0.tgz
-```
+``` 
 
 11) Open a browser and go to: `http://127.0.0.1:3001` to use the GUI.  
